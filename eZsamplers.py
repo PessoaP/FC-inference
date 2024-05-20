@@ -17,7 +17,20 @@ def ap_binomial(N,rho,size=1):
     base = gaussian_base.sample(N.shape)
     mean = N*rho
     var = mean*(1-rho)
-    return  (mean+base*torch.sqrt(var)).clamp(0.)
+    res =  (mean+base*torch.sqrt(var))#.clamp(0.)
+
+    replace = torch.logical_and(mean<50,mean-3*torch.sqrt(var)<20)
+    #replace = res < 50
+    #print('check_binomial',(replace.sum()/replace.size(0)).item())
+    #print('prob inds',torch.arange(N.size(0),device=N.device)[replace][:100])
+    #print('check bin',mean[replace])
+    #print('check bin',torch.sqrt(var[replace]))
+    #print(rho[replace])
+    if torch.any(replace):
+        bin_sampler = torch.distributions.Binomial((mean[replace]).round().int(),rho[replace])
+        res[replace] = bin_sampler.sample()*1.0
+
+    return res
 
 def ap_poisson(rate,size=1):
     if isinstance(rate,np.ndarray) or isinstance(rate,np.float64) or isinstance(rate,np.float32) or isinstance(rate,float) or isinstance(rate,int):
@@ -30,10 +43,12 @@ def ap_poisson(rate,size=1):
     base = gaussian_base.sample(rate.shape)
     res = rate+base*torch.sqrt(rate)
 
-    #replace = rate<50
-    #if torch.any(replace):
-    #    poisson_sampler = torch.distributions.Poisson(rate[replace])
-    #    res[replace] = poisson_sampler.sample()*1.0
+    replace = rate<50
+    #print('check_poisson',(replace.sum()/replace.size(0)).item())
+    #print('check pois',rate[replace])
+    if torch.any(replace):
+        poisson_sampler = torch.distributions.Poisson(rate[replace])
+        res[replace] = poisson_sampler.sample()*1.0
 
     return res
 

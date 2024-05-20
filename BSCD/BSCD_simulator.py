@@ -8,7 +8,7 @@ import eZsamplers
 
 enable_cuda=True
 device = torch.device('cuda' if torch.cuda.is_available() and enable_cuda else 'cpu')
-device = torch.device('cpu')
+#device = torch.device('cpu')
 eZsamplers.adjust_device(device)
 
 def adjust_device(dev):
@@ -114,9 +114,11 @@ def simulator(beta,lam,sig,rho=None,T=100,n=1024):
         s_div[dont_divide] = s[dont_divide]
         x = x_div
         s = s_div
+        #print(t)
 
     resample = torch.isnan(x)
     #print('this should be zero', resample.sum())
+    #print(beta[resample][0],lam[resample][0],sig[resample][0])
 
     if torch.any(resample):
         t[resample],x[resample],s[resample] = simulator(beta[resample],lam[resample],sig[resample],rho,T[resample]) 

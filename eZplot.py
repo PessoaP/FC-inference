@@ -5,14 +5,18 @@ from eZsamplers import random_binary
 
 def make_plot(ax,th,model,target,system):
     values = th.cpu().numpy()
+    n=2**15
     if system == 'BSCD':
-        x = target.sample(th[:2], th[2:4], th[4],n=2**15,return_lparams=False)
+        x = target.sample(th[:2], th[2:4], th[4],n=n,return_lparams=False)
         ax.set_title(r'$\Psi_{{\beta_l}}$ = {:.2f}  $\Psi_{{\beta_h}}$ = {:.2f} $\Psi_{{\lambda_{{act}}}}$ = {:.2f} $\Psi_{{\lambda_{{ina}}}}$  = {:.2f} $\Psi_{{\sigma}}$  = {:.2f}'.format(*values))
-    elif system == 'FCBSCD':
-        x = target.sample(th[:2], th[2:4], th[4], th[5],n=2**15,return_lparams=False)
+    elif system == 'FCBSCD':      
+        th_s = th*torch.ones((n//8,6),device=th.device)
+        x= [target.sample(th_s[:,:2],th_s[:,2:4], 
+                          th_s[:,4], th_s[:,5],n=n//8,return_lparams=False).cpu() for i in range(8)]
+        x = torch.concatenate(x)
         ax.set_title(r'$\Psi_{{\beta_l}}$ = {:.2f}  $\Psi_{{\beta_h}}$ = {:.2f} $\Psi_{{\lambda_{{act}}}}$ = {:.2f} $\Psi_{{\lambda_{{ina}}}}$  = {:.2f} $\Psi_{{\sigma}}$  = {:.2f} $\Psi_{{\xi}}$  = {:.2f}'.format(*values),fontsize=8)
     
-    xx = torch.linspace(x.min()*.95,x.max()*1.05,201,device=x.device) 
+    xx = torch.linspace(x.min()*.95,x.max()*1.05,201,device=th.device) 
     ly = model.log_prob(xx.reshape(-1,1), th.repeat(xx.size(0),1)).detach()
     
     x,xx,ly = x.cpu(),xx.cpu(),ly.cpu()
@@ -22,7 +26,7 @@ def make_plot(ax,th,model,target,system):
     y = y/(y.sum()*dx)
 
     ax.plot(xx,y,label='NN likelihood')
-    ax.hist(x.reshape((1,-1)),density=True,bins=40,label='Simulation')
+    ax.hist(x.reshape((1,-1)),density=True,bins=35,label='Simulation')
     
     ax.legend()
 
