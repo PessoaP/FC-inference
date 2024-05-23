@@ -14,8 +14,8 @@ device = torch.device('cuda' if torch.cuda.is_available() and enable_cuda else '
 BSCD_simulator.adjust_device(device)
 eZsamplers.adjust_device(device)
 
-mu = 500
-sig = 100
+mu = 1497
+sig = 642
 l0 = (mu/sig)**2
 k = (sig**2)/mu
 
