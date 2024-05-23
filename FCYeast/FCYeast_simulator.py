@@ -66,12 +66,12 @@ def simulator(beta,lam,sig,xi,rho,T=100,n=1024):
 
 
 class target():
-    def __init__(self, means = (5.,8.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,1.,.25,2)):
+    def __init__(self, means = (3.,8.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,1.,.25,2)):
         self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.rho = eZsamplers.beta_sym(2.,6.,device=device)
 
-    def change_sampling_distro(self, means = (5.,8.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,1.,.25,2)):
+    def change_sampling_distro(self, means = (3.,8.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,1.,.25,2)):
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
 
     def log_prior(self,x):
