@@ -61,8 +61,7 @@ def adjust_indexes(n):
         ind=torch.arange(n,device=device)
     
 def simulate_between_cell_div(x,s,T,beta,lam,rho):  
-    #T means time until division (dt in the other func)  
-    t = torch.zeros_like(T)
+    t = torch.zeros_like(T)#T means time until division (dt in the other func)  
     rate = torch.zeros_like(x)
 
     stop_changing= t>T
