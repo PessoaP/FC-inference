@@ -66,12 +66,12 @@ def simulator(beta,lam,sig,xi,rho,T=100,n=1024):
 
 
 class target():
-    def __init__(self, means = (3.,8.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,1.,.25,2)):
+    def __init__(self, means = (1.5,5.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,1.,.5,2)):
         self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.rho = eZsamplers.beta_sym(2.,6.,device=device)
 
-    def change_sampling_distro(self, means = (3.,8.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,1.,.25,2)):
+    def change_sampling_distro(self, means = (1.5,5.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,1.,.5,2)):
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
 
     def log_prior(self,x):
@@ -87,11 +87,13 @@ class target():
             xi  = torch.exp(params[:,5])
 
         else:
-            params = torch.hstack((lbeta,llam,lsig.reshape(-1,1),lxi.reshape(-1,1)))*torch.ones((n,6),device=device)
+            #params = torch.hstack((lbeta,llam,lsig.reshape(-1,1),lxi.reshape(-1,1)))*torch.ones((n,6),device=device)
+            
+            lbeta,llam,lsig,lxi,void= fix_data_type(lbeta,llam,lsig,lxi,n)
             beta,lam,sig,xi = torch.exp(lbeta),torch.exp(llam),torch.exp(lsig),torch.exp(lxi)
             
 
- 
+
 
         t,I,s = simulator(beta,lam,sig,xi,rho=self.rho,T=T,n=n)
         lI = torch.log(I.clamp(1.))
