@@ -17,15 +17,10 @@ def ap_binomial(N,rho,size=1):
     base = gaussian_base.sample(N.shape)
     mean = N*rho
     var = mean*(1-rho)
-    res =  (mean+base*torch.sqrt(var))#.clamp(0.)
+    res =  (mean+base*torch.sqrt(var))
 
     replace = torch.logical_and(mean<50,mean-3*torch.sqrt(var)<20)
-    #replace = res < 50
-    #print('check_binomial',(replace.sum()/replace.size(0)).item())
-    #print('prob inds',torch.arange(N.size(0),device=N.device)[replace][:100])
-    #print('check bin',mean[replace])
-    #print('check bin',torch.sqrt(var[replace]))
-    #print(rho[replace])
+
     if torch.any(replace):
         bin_sampler = torch.distributions.Binomial((mean[replace]).round().int(),rho[replace])
         res[replace] = bin_sampler.sample()*1.0
@@ -44,8 +39,6 @@ def ap_poisson(rate,size=1):
     res = rate+base*torch.sqrt(rate)
 
     replace = rate<50
-    #print('check_poisson',(replace.sum()/replace.size(0)).item())
-    #print('check pois',rate[replace])
     if torch.any(replace):
         poisson_sampler = torch.distributions.Poisson(rate[replace])
         res[replace] = poisson_sampler.sample()*1.0
@@ -92,13 +85,11 @@ class delta():
     def log_prob(self,x):
         return torch.where(x==self.x0, 0., -torch.inf)
     
-#half = delta(.5)
     
 class beta_sym():
     def __init__(self, alpha, beta, device='cpu'):
         self.alpha,self.beta = torch.tensor(alpha).to(device), torch.tensor(beta).to(device)
         self.dist = torch.distributions.Beta(self.alpha,self.beta)
-
     
     def sample(self,shape):
         x = self.dist.sample(shape)
