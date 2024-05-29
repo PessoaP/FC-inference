@@ -8,7 +8,7 @@ def make_plot(ax,th,model,target):
     values = th.cpu().numpy()
     n=2**15
     x = target.sample(th[:1], th[1:3], th[3:4],th[4:],n=n,return_lparams=False)
-    ax.set_title(r'$\Psi_{{\beta_h}}$ = {:.2f} $\Psi_{{\lambda_{{act}}}}$ = {:.2f} $\Psi_{{\lambda_{{ina}}}}$  = {:.2f} $\Psi_{{\sigma}}$  = {:.2f}$\Psi_{{\xi}}$  = {:.2f}'.format(*values))
+    ax.set_title(r'$\Psi_{{\beta_h}}$ = {:.2f} $\Psi_{{\lambda_{{act}}}}$ = {:.2f} $\Psi_{{\lambda_{{ina}}}}$  = {:.2f} $\Psi_{{\sigma}}$  = {:.2f}  $\Psi_{{\xi}}$  = {:.2f}'.format(*values))
     
     xx = torch.linspace(x.min()*.95,x.max()*1.05,201,device=th.device) 
     ly = model.log_prob(xx.reshape(-1,1), th.repeat(xx.size(0),1)).detach()

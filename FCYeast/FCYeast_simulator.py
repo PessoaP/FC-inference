@@ -4,7 +4,7 @@ import sys
 import os
 c_directory = os.getcwd()
 sys.path.append(os.path.dirname(c_directory))
-sys.path.append(os.path.join(os.path.dirname(c_directory), 'BSCD'))
+#sys.path.append(os.path.join(os.path.dirname(c_directory), 'BSCD'))
 
 import eZsamplers
 #import BSCD_simulator
@@ -44,7 +44,6 @@ def sample_initial(beta,lam,rho, n=1024):
     tau = torch.rand(beta_eff.shape,device=device)
     rate = beta_eff*(1+tau)
     x = eZsamplers.ap_poisson(rate)
-
     s = (torch.rand((n,1),device=device)<fraction_act).int()
 
     return tau,x,s
@@ -78,9 +77,7 @@ def adjust_indexes(n):
 def simulator(beta,lam,sig,xi,rho,T=100,n=1024):
     beta,lam,sig,xi,n = fix_data_type(beta,lam,sig,xi,n)
     div_time_dist = torch.distributions.LogNormal(0., sig)
-    adjust_indexes(n)
-    
-    
+    adjust_indexes(n)    
 
     tau,x,s = sample_initial(beta,lam,rho,n)
     t = 1-tau
@@ -106,11 +103,8 @@ def simulator(beta,lam,sig,xi,rho,T=100,n=1024):
         x = x_div
         s = s_div
 
-
     if torch.any(torch.isnan(x)):
-        print('warning, it is returning nans')
-
-
+        print('warning, the simulation is returning NaNs')
 
     I = eZsamplers.ap_poisson(l0+xi*x)*k
     return t,I,s
@@ -118,7 +112,7 @@ def simulator(beta,lam,sig,xi,rho,T=100,n=1024):
 
 
 class target():
-    def __init__(self, means = (8.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,.5,2)):
+    def __init__(self, means = (6.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,.5,2)):
         self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.rho = eZsamplers.beta_sym(2.,6.,device=device)

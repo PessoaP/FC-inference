@@ -34,7 +34,7 @@ else:
 
 gt_sep = FC3_simulator.transform_to_arbitrary(torch.stack([gt]))
 
-lbetas,llams,lsigs,lxis = gt_sep[:,:,:2],gt_sep[:,:,2:4],gt_sep[:,:,4],gt_sep[:,:,5]
+lbetas,llams,lsigs,lxis = gt_sep[:,:,:1],gt_sep[:,:,1:3],gt_sep[:,:,3:4],gt_sep[:,:,4:]
 x = target.sample(lbetas,llams,lsigs,lxis,n=N)
 
 print(x)

@@ -46,7 +46,7 @@ x,context = x[:,0].reshape(-1,1)*1.0,x[:,1:]
 batches = torch.arange(x.size(0)).reshape(n_batch,-1)
 
 # %%
-# Trainig parametrs
+
 loss_hist = []
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-6)
 
