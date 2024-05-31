@@ -20,9 +20,10 @@ s_indices1 = torch.tensor([0, 1, 2, 3, 10], device=device)
 s_indices2 = torch.tensor([0, 4, 5, 6, 10], device=device)
 s_indices3 = torch.tensor([0, 7, 8, 9, 10], device=device)
 
-to_arbitrary = -torch.tensor([[[1, 0, 0, 0, 0]],
-                              [[1, 0, 0, 0, 0]], 
-                              [[1, 0, 0, 0, 0]]], device=device) * torch.log(dils).reshape(-1, 1, 1).to(device)
+to_arbitrary = -torch.tensor([[1, 0, 0, 0, 0],
+                              [1, 0, 0, 0, 0], 
+                              [1, 0, 0, 0, 0]], device=device) * torch.log(dils).reshape(-1, 1).to(device)
+
 def adjust_device(dev):
     global device,dils,s_indices1,s_indices2,s_indices3,to_arbitrary
     FCYeast_simulator.adjust_device(dev)
@@ -33,14 +34,14 @@ def adjust_device(dev):
     s_indices1 = torch.tensor([0, 1, 2, 3, 10], device=device)
     s_indices2 = torch.tensor([0, 4, 5, 6, 10], device=device)
     s_indices3 = torch.tensor([0, 7, 8, 9, 10], device=device)
-    to_arbitrary = -torch.tensor([[[1, 0, 0, 0, 0]],
-                                  [[1, 0, 0, 0, 0]], 
-                                  [[1, 0, 0, 0, 0]]], device=device) * torch.log(dils).reshape(-1, 1, 1).to(device)
+    to_arbitrary = -torch.tensor([[1, 0, 0, 0, 0],
+                                  [1, 0, 0, 0, 0], 
+                                  [1, 0, 0, 0, 0]], device=device) * torch.log(dils).reshape(-1, 1).to(device)
     
 def separate(x):
-    group1 = x[:, s_indices1]
-    group2 = x[:, s_indices2]
-    group3 = x[:, s_indices3]
+    group1 = x[s_indices1]
+    group2 = x[s_indices2]
+    group3 = x[s_indices3]
     return torch.stack((group1, group2, group3), dim=0)
 
 def transform_to_arbitrary(x):  #suppose that \betas (0 and 1) are in hours, and the other in the arbirary units. Turn them all to arbitrary
@@ -69,15 +70,16 @@ class target():
             params_sep = transform_to_arbitrary(params)
                 
 
-            betas = torch.exp(params_sep[:,:,:1])
-            lams  = torch.exp(params_sep[:,:,1:3])
-            sigs  = torch.exp(params_sep[:,:,3:4])
-            xis   = torch.exp(params_sep[:,:,4:])
+            betas = torch.exp(params_sep[:,:1])
+            lams  = torch.exp(params_sep[:,1:3])
+            sigs  = torch.exp(params_sep[:,3:4])
+            xis   = torch.exp(params_sep[:,4:])
 
 
         else:
             betas,lams,sigs,xis = torch.exp(lbetas),torch.exp(llams),torch.exp(lsigs),torch.exp(lxis)
 
+        #print(betas,lams,sigs,xis)
         lIs =[]
         for (beta,lam,sig,xi) in zip(betas,lams,sigs,xis):
             beta,lam,sig,xi,n = FCYeast_simulator.fix_data_type(beta,lam,sig,xi,n)

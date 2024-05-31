@@ -32,12 +32,11 @@ else:
     np.savetxt('FC3_synth/gt_map.csv', np.vstack((dv,np.hstack((np.array((seed)),gt.cpu().numpy())))) )
 
 
-gt_sep = FC3_simulator.transform_to_arbitrary(torch.stack([gt]))
+gt_sep = FC3_simulator.transform_to_arbitrary(gt)
 
-lbetas,llams,lsigs,lxis = gt_sep[:,:,:1],gt_sep[:,:,1:3],gt_sep[:,:,3:4],gt_sep[:,:,4:]
+lbetas,llams,lsigs,lxis = gt_sep[:,:1],gt_sep[:,1:3],gt_sep[:,3:4],gt_sep[:,4:]
 x = target.sample(lbetas,llams,lsigs,lxis,n=N)
 
-print(x)
 np.savetxt('FC3_synth/synth_{}.csv'.format(seed),x.cpu().numpy())
 
 
