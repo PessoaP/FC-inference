@@ -54,7 +54,7 @@ def adjust_indexes(n):
         ind=torch.arange(n,device=device)
 
 class target():
-    def __init__(self, means = (6.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,.5,2)):
+    def __init__(self, means = (7,0.,0.,-2.3,-1), sigmas=(2.,1.,1.,.5,2)):
         self.t_base = FCYeast_simulator.target(means,sigmas)
         means = self.t_base.prior.loc[[0,1,2,3,1,2,3,1,2,3,4]] 
         sigmas = torch.sqrt(self.t_base.prior.covariance_matrix.diag())[[0,1,2,3,1,2,3,1,2,3,4]] 

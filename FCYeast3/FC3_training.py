@@ -20,7 +20,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 # %%
-dil='12'
+dil= sys.argv[1]
 dil_factor = int(dil)/100
 folder = 'dilution'+dil
 model_file = folder+'/FCYeast_network.pt'
@@ -47,7 +47,7 @@ except:
     print('starting from scratch')
 
 # %%
-max_iter   = 4000
+max_iter   = 2000
 show_iter  = 100
 n_batch    = 16
 
@@ -64,6 +64,7 @@ batches = torch.arange(x.size(0)).reshape(n_batch,-1)
 loss_hist = np.array([])
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-6)
 
+print('starting training', dil,target.prior.loc.cpu(),context.mean(axis=0))
 # %%
 for it in tqdm(range(max_iter)):
     loss_epoch = np.array([])
