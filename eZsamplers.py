@@ -45,6 +45,10 @@ def ap_poisson(rate,size=1):
 
     return res
 
+def gaussian_sample(mus,sigs):
+    base = gaussian_base.sample(mus.shape)
+    return mus+base*sigs
+
 def exponential(lam,size=1,rate=True):
     if isinstance(lam,np.ndarray) or isinstance(lam,np.float64) or isinstance(lam,np.float32) or isinstance(lam,float) or isinstance(lam,int):
         lam = torch.tensor(lam)

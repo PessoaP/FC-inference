@@ -2,7 +2,7 @@ import torch
 import normflows as nf
 
 latent_size = 1
-context_size = 5
+context_size = 4
 
 
 def make_model(device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'),hidden_layers=5):

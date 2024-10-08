@@ -4,35 +4,30 @@ import sys
 import os
 c_directory = os.getcwd()
 sys.path.append(os.path.dirname(c_directory))
-#sys.path.append(os.path.join(os.path.dirname(c_directory), 'BSCD'))
 
 import eZsamplers
-#import BSCD_simulator
 
 enable_cuda=True
 device = torch.device('cuda' if torch.cuda.is_available() and enable_cuda else 'cpu')
-#BSCD_simulator.adjust_device(device)
+
 eZsamplers.adjust_device(device)
 
-mu = 1497
-sig = 624
-l0 = (mu/sig)**2
-k = (sig**2)/mu
+mu0 = 1497
+sigma0 = 624
+xi = 0.05
 
 
 def adjust_device(dev):
     global device
-    #BSCD_simulator.adjust_device(dev)
     eZsamplers.adjust_device(dev)
     device = dev
 
-def fix_data_type(lbeta,llam,lsig,lxi,n):    
+def fix_data_type(lbeta,llam,lsig,n):    
     lbeta = lbeta*torch.ones((n,1),device=device)
     llam = llam*torch.ones((n,2),device=device)
     lsig = lsig*torch.ones((n,1),device=device)
-    lxi = lxi*torch.ones((n,1),device=device)
     
-    return lbeta,llam,lsig,lxi,lxi.size()[0]
+    return lbeta,llam,lsig,lsig.size()[0]
 
 
 def sample_initial(beta,lam,rho, n=1024):
@@ -74,8 +69,8 @@ def adjust_indexes(n):
     if (ind.dim != 1) or (ind.shape[0]!=n) :
         ind=torch.arange(n,device=device).reshape(-1,1)
     
-def simulator(beta,lam,sig,xi,rho,T=100,n=1024):
-    beta,lam,sig,xi,n = fix_data_type(beta,lam,sig,xi,n)
+def simulator(beta,lam,sig,rho,T=100,n=1024):
+    beta,lam,sig,n = fix_data_type(beta,lam,sig,n)
     div_time_dist = torch.distributions.LogNormal(0., sig)
     adjust_indexes(n)    
 
@@ -98,7 +93,7 @@ def simulator(beta,lam,sig,xi,rho,T=100,n=1024):
 
         x_div,s_div = simulate_between_cell_div(x,s,dt_prop,beta,lam,rho)
 
-        x_div[dont_divide] = x[dont_divide] # the ones who overshot time do not divide, we remove these
+        x_div[dont_divide] = x[dont_divide] #the ones who overshot time do not divide, we remove these
         s_div[dont_divide] = s[dont_divide]
         x = x_div
         s = s_div
@@ -106,13 +101,14 @@ def simulator(beta,lam,sig,xi,rho,T=100,n=1024):
     if torch.any(torch.isnan(x)):
         print('warning, the simulation is returning NaNs')
 
-    I = eZsamplers.ap_poisson(l0+xi*x)*k
+    I = mu0  +  sigma0*torch.randn_like(x) + xi*x + torch.sqrt(xi*x)*torch.randn_like(x)
     return t,I,s
 
 
 
 class target():
-    def __init__(self, means = (6.,0.,0.,-2.3,0), sigmas=(1.,1.,1.,.5,2)):
+    #def __init__(self, means = (10,0.,0.,-2.3), sigmas=(3.,1.,1.,.5)):
+    def __init__(self, means = (10,0.,0.,-2.3), sigmas=(3.,1.,1.,.5)):
         self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.rho = eZsamplers.beta_sym(2.,6.,device=device)
@@ -120,21 +116,20 @@ class target():
     def log_prior(self,x):
         return self.prior.log_prob(x)
         
-    def sample(self, lbeta=None, llam=None, lsig=None, lxi=None,  T=100, n=1024,return_lparams=True):
+    def sample(self, lbeta=None, llam=None, lsig=None,  T=100, n=1024,return_lparams=True):
         if lbeta is None:
             params = self.params_dist.sample((n,))
 
             beta = torch.exp(params[:,:1])
             lam  = torch.exp(params[:,1:3])
             sig  = torch.exp(params[:,3:4])
-            xi   = torch.exp(params[:,4:])
 
         else:
-            lbeta,llam,lsig,lxi,void= fix_data_type(lbeta,llam,lsig,lxi,n)
-            beta,lam,sig,xi = torch.exp(lbeta),torch.exp(llam),torch.exp(lsig),torch.exp(lxi)
+            lbeta,llam,lsig,void= fix_data_type(lbeta,llam,lsig,n)
+            beta,lam,sig = torch.exp(lbeta),torch.exp(llam),torch.exp(lsig)
 
 
-        t,I,s = simulator(beta,lam,sig,xi,rho=self.rho,T=T,n=n)
+        t,I,s = simulator(beta,lam,sig,rho=self.rho,T=T,n=n)
         lI = torch.log(I.clamp(1.))
 
         if return_lparams:

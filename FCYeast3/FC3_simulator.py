@@ -16,13 +16,13 @@ FCYeast_simulator.adjust_device(device)
 eZsamplers.adjust_device(device)
 
 dils = torch.tensor([.12,.23,.33],device=device)
-s_indices1 = torch.tensor([0, 1, 2, 3, 10], device=device)
-s_indices2 = torch.tensor([0, 4, 5, 6, 10], device=device)
-s_indices3 = torch.tensor([0, 7, 8, 9, 10], device=device)
+s_indices1 = torch.tensor([0, 1, 2, 3], device=device)
+s_indices2 = torch.tensor([0, 4, 5, 6], device=device)
+s_indices3 = torch.tensor([0, 7, 8, 9], device=device)
 
-to_arbitrary = -torch.tensor([[1, 0, 0, 0, 0],
-                              [1, 0, 0, 0, 0], 
-                              [1, 0, 0, 0, 0]], device=device) * torch.log(dils).reshape(-1, 1).to(device)
+to_arbitrary = -torch.tensor([[1, 0, 0, 0],
+                              [1, 0, 0, 0], 
+                              [1, 0, 0, 0]], device=device) * torch.log(dils).reshape(-1, 1).to(device)
 
 def adjust_device(dev):
     global device,dils,s_indices1,s_indices2,s_indices3,to_arbitrary
@@ -31,12 +31,12 @@ def adjust_device(dev):
     device = dev
 
     dils = torch.tensor([.12,.23,.33],device=device)
-    s_indices1 = torch.tensor([0, 1, 2, 3, 10], device=device)
-    s_indices2 = torch.tensor([0, 4, 5, 6, 10], device=device)
-    s_indices3 = torch.tensor([0, 7, 8, 9, 10], device=device)
-    to_arbitrary = -torch.tensor([[1, 0, 0, 0, 0],
-                                  [1, 0, 0, 0, 0], 
-                                  [1, 0, 0, 0, 0]], device=device) * torch.log(dils).reshape(-1, 1).to(device)
+    s_indices1 = torch.tensor([0, 1, 2, 3], device=device)
+    s_indices2 = torch.tensor([0, 4, 5, 6], device=device)
+    s_indices3 = torch.tensor([0, 7, 8, 9], device=device)
+    to_arbitrary = -torch.tensor([[1, 0, 0, 0],
+                                  [1, 0, 0, 0], 
+                                  [1, 0, 0, 0]], device=device) * torch.log(dils).reshape(-1, 1).to(device)
     
 def separate(x):
     group1 = x[s_indices1]
@@ -54,17 +54,18 @@ def adjust_indexes(n):
         ind=torch.arange(n,device=device)
 
 class target():
-    def __init__(self, means = (7,0.,0.,-2.3,-1), sigmas=(2.,1.,1.,.5,2)):
+    #def __init__(self, means = (7,0.,0.,-2.3), sigmas=(2.,1.,1.,.5)):
+    def __init__(self, means = (10,0.,0.,-1.6), sigmas=(2.,1.,1.,1.)):
         self.t_base = FCYeast_simulator.target(means,sigmas)
-        means = self.t_base.prior.loc[[0,1,2,3,1,2,3,1,2,3,4]] 
-        sigmas = torch.sqrt(self.t_base.prior.covariance_matrix.diag())[[0,1,2,3,1,2,3,1,2,3,4]] 
+        means = self.t_base.prior.loc[[0,1,2,3,1,2,3,1,2,3]] 
+        sigmas = torch.sqrt(self.t_base.prior.covariance_matrix.diag())[[0,1,2,3,1,2,3,1,2,3]] 
 
         self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).clone().detach().to(device), torch.diag(torch.tensor(sigmas)**2).clone().detach().to(device))
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).clone().detach().to(device), torch.diag(torch.tensor(sigmas)**2).clone().detach().to(device))
         self.rho = eZsamplers.beta_sym(2.,6.,device=device)
 
 
-    def sample(self, lbetas=None, llams=None, lsigs=None, lxis=None,  T=100, n=1024,return_lparams=True):
+    def sample(self, lbetas=None, llams=None, lsigs=None,  T=100, n=1024,return_lparams=True):
         if lbetas == None:
             params = self.params_dist.sample((n,))
             params_sep = transform_to_arbitrary(params)
@@ -73,18 +74,17 @@ class target():
             betas = torch.exp(params_sep[:,:1])
             lams  = torch.exp(params_sep[:,1:3])
             sigs  = torch.exp(params_sep[:,3:4])
-            xis   = torch.exp(params_sep[:,4:])
 
 
         else:
-            betas,lams,sigs,xis = torch.exp(lbetas),torch.exp(llams),torch.exp(lsigs),torch.exp(lxis)
+            betas,lams,sigs = torch.exp(lbetas),torch.exp(llams),torch.exp(lsigs)
 
         #print(betas,lams,sigs,xis)
         lIs =[]
-        for (beta,lam,sig,xi) in zip(betas,lams,sigs,xis):
-            beta,lam,sig,xi,n = FCYeast_simulator.fix_data_type(beta,lam,sig,xi,n)
+        for (beta,lam,sig) in zip(betas,lams,sigs):
+            beta,lam,sig,n = FCYeast_simulator.fix_data_type(beta,lam,sig,n)
 
-            t,I,s = FCYeast_simulator.simulator(beta,lam,sig,xi,rho=self.rho,T=T,n=n)
+            t,I,s = FCYeast_simulator.simulator(beta,lam,sig,rho=self.rho,T=T,n=n)
 
             lI = torch.log(I.clamp(1.))
             lIs.append(lI.reshape(-1,1))
