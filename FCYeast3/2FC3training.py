@@ -75,7 +75,8 @@ for it in tqdm(range(max_iter)):
         # Compute loss
         batch = batches[it2]
         loss = -model.log_prob(x[batch], context[batch]).mean()
-        
+        #print('loss'.loss.item())
+        #
         # Do backprop and optimizer step
         if ~(torch.isnan(loss) | torch.isinf(loss)):
             loss.backward()
@@ -85,6 +86,7 @@ for it in tqdm(range(max_iter)):
         del loss #this is a test
 
     # Log loss
+       
     loss_hist = np.append(loss_hist, np.mean(loss_epoch))
 
     if (it+1)%show_iter==0:
@@ -108,8 +110,6 @@ for it in tqdm(range(max_iter)):
 
 # %%
 torch.save(model.state_dict(), model_file)
-
-# %%
 
 
 

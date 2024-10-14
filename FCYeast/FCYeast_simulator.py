@@ -107,7 +107,6 @@ def simulator(beta,lam,sig,rho,T=100,n=1024):
 
 
 class target():
-    #def __init__(self, means = (10,0.,0.,-2.3), sigmas=(3.,1.,1.,.5)):
     def __init__(self, means = (10,0.,0.,-2.3), sigmas=(3.,1.,1.,.5)):
         self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))

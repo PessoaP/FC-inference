@@ -4,8 +4,9 @@ import normflows as nf
 latent_size = 1
 context_size = 4
 
-
-def make_model(device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'),hidden_layers=5):
+def make_model(device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
+               hidden_layers=5,
+               conditional=True):
         
     q0 = nf.distributions.DiagGaussian(1)
 
@@ -19,8 +20,12 @@ def make_model(device = torch.device('cuda' if torch.cuda.is_available() else 'c
              nf.flows.LULinearPermute(latent_size)
              ]
 
-    target = torch.distributions.Normal(0,1)
-    model = nf.ConditionalNormalizingFlow(q0, flows, target)
+    if conditional:
+        model = nf.ConditionalNormalizingFlow(q0, flows)
+    else:
+        q0 = nf.distributions.DiagGaussian(1,trainable=False)
+        model=nf.NormalizingFlow(q0,flows)
 
 
     return model.to(device)
+
