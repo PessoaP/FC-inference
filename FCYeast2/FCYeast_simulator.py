@@ -1,0 +1,146 @@
+import torch
+
+import sys
+import os
+c_directory = os.getcwd()
+sys.path.append(os.path.dirname(c_directory))
+import architecture
+import eZsamplers
+
+enable_cuda=True
+device = torch.device('cuda' if torch.cuda.is_available() and enable_cuda else 'cpu')
+
+eZsamplers.adjust_device(device)
+
+xi = 0.05
+
+autofluo = architecture.make_model(conditional=False)
+autofluo.load_state_dict(torch.load('autofluorescence.pt'))
+for param in autofluo.parameters():
+    param.requires_grad = False
+
+
+def adjust_device(dev):
+    global device
+    eZsamplers.adjust_device(dev)
+    device = dev
+
+def fix_data_type(lbeta,llam,lsig,n):    
+    lbeta = lbeta*torch.ones((n,1),device=device)
+    llam = llam*torch.ones((n,2),device=device)
+    lsig = lsig*torch.ones((n,1),device=device)
+    
+    return lbeta,llam,lsig,lsig.size()[0]
+
+
+def sample_initial(beta,lam,rho, n=1024):
+
+    fraction_act = (lam[:,1]/lam.sum(dim=1)).reshape(-1,1)
+    beta_eff = beta*fraction_act
+
+    #Heuristically, it start at the steady-state of the non stochastic cell div.
+    tau = torch.rand(beta_eff.shape,device=device)
+    rate = beta_eff*(1+tau)
+    x = eZsamplers.ap_poisson(rate)
+    s = (torch.rand((n,1),device=device)<fraction_act).int()
+
+    return tau,x,s
+
+def simulate_between_cell_div(x,s,T,beta,lam,rho):  
+    t = torch.zeros_like(T)#T means time until division (dt in the other func)  
+    rate = torch.zeros_like(x)
+
+    stop_changing= t>T
+
+    while not(torch.all(stop_changing)):
+        dt_prop = eZsamplers.exponential(lam[ind,s])#the first 0 is ridic please fix
+        stop_changing = t + dt_prop > T
+
+        dt_prop[stop_changing] = T[stop_changing]-t[stop_changing]
+        t += dt_prop
+
+        rate+=beta*dt_prop*(s==1).int()
+        s = torch.where(stop_changing, s, 1 - s)
+
+    x += eZsamplers.ap_poisson(rate)
+    x = eZsamplers.ap_binomial(x,rho.sample(x.shape))
+    return x,s
+
+ind=torch.arange(1024,device=device).reshape(-1,1)
+def adjust_indexes(n):
+    global ind
+    if (ind.dim != 1) or (ind.shape[0]!=n) :
+        ind=torch.arange(n,device=device).reshape(-1,1)
+    
+def simulator(beta,lam,sig,rho,T=100,n=1024):
+    beta,lam,sig,n = fix_data_type(beta,lam,sig,n)
+    div_time_dist = torch.distributions.LogNormal(0., sig)
+    adjust_indexes(n)    
+
+    tau,x,s = sample_initial(beta,lam,rho,n)
+    t = 1-tau
+    x,s = simulate_between_cell_div(x,s,t,beta,lam,rho) #grow and divide for the time t-tau.
+
+    T = T*torch.ones_like(x)
+    dont_divide = t>T
+    
+    while not(torch.all(dont_divide)):
+        #sample the next division time
+        dt_prop = div_time_dist.sample()
+        t_prop = t + dt_prop
+
+        dont_divide = t_prop > T # indices where we already reach T.
+
+        dt_prop[dont_divide] = T[dont_divide]-t[dont_divide] #the ones who overshot time only grow in the time between.
+        t += dt_prop
+
+        x_div,s_div = simulate_between_cell_div(x,s,dt_prop,beta,lam,rho)
+
+        x_div[dont_divide] = x[dont_divide] #the ones who overshot time do not divide, we remove these
+        s_div[dont_divide] = s[dont_divide]
+        x = x_div
+        s = s_div
+
+    if torch.any(torch.isnan(x)):
+        print('warning, the simulation is returning NaNs')
+
+    I = xi*x + torch.sqrt(xi*x)*torch.randn_like(x)
+    return t,I,s
+
+
+
+class target():
+    def __init__(self, means = (10,0.,0.,-2.3), sigmas=(3.,1.,1.,.5)):
+        self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
+        self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
+        self.rho = eZsamplers.beta_sym(2.,6.,device=device)
+
+    def log_prior(self,x):
+        return self.prior.log_prob(x)
+        
+    def sample(self, lbeta=None, llam=None, lsig=None,  T=100, n=1024,return_lparams=True):
+        if lbeta is None:
+            params = self.params_dist.sample((n,))
+
+            beta = torch.exp(params[:,:1])
+            lam  = torch.exp(params[:,1:3])
+            sig  = torch.exp(params[:,3:4])
+
+        else:
+            lbeta,llam,lsig,void= fix_data_type(lbeta,llam,lsig,n)
+            beta,lam,sig = torch.exp(lbeta),torch.exp(llam),torch.exp(lsig)
+
+
+        t,I_prot,s = simulator(beta,lam,sig,rho=self.rho,T=T,n=n)
+        
+        ##Working
+        #I = (torch.exp(autofluo.sample((n))[0]) + I_prot).clamp(1.)
+        #lI = torch.log(I )
+
+        ##Testing
+        lI = torch.logaddexp(autofluo.sample((n))[0],torch.log(I_prot.clamp(xi)))
+        
+        if return_lparams:
+            return torch.hstack((lI.reshape(-1,1),params))
+
+        return lI
