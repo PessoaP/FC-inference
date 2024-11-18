@@ -43,19 +43,19 @@ def sample_initial(beta,lam,rho, n=1024):
     return tau,x,s
 
 def simulate_between_cell_div(x,s,T,beta,lam,rho):  
-    t = torch.zeros_like(T)#T means time until division (dt in the other func)  
+    t = torch.zeros_like(T) #T means time until division (dt in the other func)  
     rate = torch.zeros_like(x)
 
     stop_changing= t>T
 
     while not(torch.all(stop_changing)):
-        dt_prop = eZsamplers.exponential(lam[ind,s])#the first 0 is ridic please fix
+        dt_prop = eZsamplers.exponential(lam[ind,s]) 
         stop_changing = t + dt_prop > T
 
         dt_prop[stop_changing] = T[stop_changing]-t[stop_changing]
         t += dt_prop
 
-        rate+=beta*dt_prop*(s==1).int()
+        rate+=beta*dt_prop*((s==1).int())
         s = torch.where(stop_changing, s, 1 - s)
 
     x += eZsamplers.ap_poisson(rate)
@@ -117,7 +117,6 @@ class target():
     def sample(self, lbeta=None, llam=None, lsig=None,  T=100, n=1024,return_lparams=True):
         if lbeta is None:
             params = self.params_dist.sample((n,))
-
             beta = torch.exp(params[:,:1])
             lam  = torch.exp(params[:,1:3])
             sig  = torch.exp(params[:,3:4])
@@ -125,7 +124,6 @@ class target():
         else:
             lbeta,llam,lsig,void= fix_data_type(lbeta,llam,lsig,n)
             beta,lam,sig = torch.exp(lbeta),torch.exp(llam),torch.exp(lsig)
-
 
         t,Pr,s = simulator(beta,lam,sig,rho=self.rho,T=T,n=n)
         I_prot = prot2intensity(Pr)

@@ -60,11 +60,11 @@ dfs = [pd.read_csv(os.path.dirname(c_directory) +'/clean_data/complete_d={}.csv'
 x = [torch.tensor(df['FL1-A'].to_numpy().astype(np.float32)).reshape(-1,1).to(device) for df in dfs]
 
 #uncomment to use only 20% of the data
-#N = 10*(min([xi.size(0) for xi in x])//10)
-#ind = torch.arange(0,N)%10<2 
+# N = 10*(min([xi.size(0) for xi in x])//10)
+# ind = torch.arange(0,N)%10<2 
 
-x = [torch.log(xi[:N][ind]) for xi in x]
-N = ind.sum()
+# x = [torch.log(xi[:N][ind]) for xi in x]
+# N = ind.sum()
 
 # %%
 l,s = target.prior.loc, torch.sqrt(target.prior.covariance_matrix.diag())
