@@ -47,12 +47,13 @@ except:
 
 # %%
 max_iter   = 2000
+max_iter   = 900
 show_iter  = 100
+
 n_batch    = 16
-
-
 x = target.sample(n=1024*1024)
 batch_size = x.size(0)//n_batch
+
 
 x,context = x[:,0].reshape(-1,1)*1.0,x[:,1:]
 
@@ -105,6 +106,8 @@ for it in tqdm(range(max_iter)):
         shuffle_index = torch.randperm(x.size(0))
         x = (x[shuffle_index]).contiguous()
         context = (context[shuffle_index]).contiguous()
+
+        #batches = torch.shuffle(torch.arange(x.size(0))).reshape(n_batch,-1)
 
 
 # %%

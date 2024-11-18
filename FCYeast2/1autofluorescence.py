@@ -27,7 +27,7 @@ def make_model_graph(model):
     plt.plot(x.cpu(),px.cpu(),color='k')
     plt.hist(data.cpu().reshape(-1),bins=99,density=True)
     plt.draw()
-    plt.pause(.05)
+    plt.savefig('autofluo.png',dpi=600)
 
 
 # %%
