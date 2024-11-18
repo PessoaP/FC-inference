@@ -174,18 +174,17 @@ for i in range(100000):
 
     if i%100 == 99:
         print(i,param,lp, logprior(param))
-        np.savetxt('mcmc_real_results_{}seed_{}datapoints.csv'.format(seed,N),
+        np.savetxt('FCYeast2_MCMC/mcmc_real_results_{}seed_{}datapoints.csv'.format(seed,N),
            np.hstack((np.stack(sampled_params), np.array(sampled_logpost).reshape(-1,1))))
         #sanity(best_param = torch.tensor(sampled_params[np.argmax(sampled_logpost)]))
 
 # %%
-np.savetxt('mcmc_real_results_{}seedd_{}datapoints.csv'.format(seed,N),
+np.savetxt('FCYeast2_MCMC/mcmc_real_results_{}seedd_{}datapoints.csv'.format(seed,N),
            np.hstack((np.stack(sampled_params), np.array(sampled_logpost).reshape(-1,1))))
 
 
 #%%
-
-
+#Just to print the sanity checck
 def sanity(best_param):
     l10 = 2.302585
 
@@ -205,7 +204,7 @@ def sanity(best_param):
 
     ax[0].legend(loc=8,ncol=3,bbox_to_anchor=(.5,1.201))
     plt.tight_layout()
-    plt.savefig('sanity_check_{}seed.png'.format(seed),dpi=600)
+    plt.savefig('FCYeast2_MCMC/sanity_check_{}seed.png'.format(seed),dpi=600)
 
 sanity(best_param)
 

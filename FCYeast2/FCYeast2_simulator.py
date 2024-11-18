@@ -5,8 +5,6 @@ import os
 
 c_directory = os.getcwd()
 sys.path.append(os.path.dirname(c_directory))
-#sys.path.append(os.path.join(os.path.dirname(c_directory), 'FCYeast'))
-
 import eZsamplers
 import FCYeast_simulator
 
@@ -49,7 +47,7 @@ def adjust_indexes(n):
         ind=torch.arange(n,device=device)
 
 class target():
-    def __init__(self, means = (10,0.,0.,-1.6), sigmas=(2.,1.,1.,1.)):
+    def __init__(self, means = (10,-1.,1.,-2.3), sigmas=(3.,1.,1.,.5)):
         self.t_base = FCYeast_simulator.target(means,sigmas)
         means = self.t_base.prior.loc[[0,1,2,3,1,2,3]] 
         sigmas = torch.sqrt(self.t_base.prior.covariance_matrix.diag())[[0,1,2,3,1,2,3]] 
@@ -78,9 +76,8 @@ class target():
         for (beta,lam,sig) in zip(betas,lams,sigs):
             beta,lam,sig,n = FCYeast_simulator.fix_data_type(beta,lam,sig,n)
 
-            #t,I,s = FCYeast_simulator.simulator(beta,lam,sig,rho=self.rho,T=T,n=n)
-            #lI = torch.log(lI.clamp(1.))
-            t,I_prot,s = FCYeast_simulator.simulator(beta,lam,sig,rho=self.rho,T=T,n=n)
+            t,Pr,s = FCYeast_simulator.simulator(beta,lam,sig,rho=self.rho,T=T,n=n)
+            I_prot = FCYeast_simulator.prot2intensity(Pr)
             lI = torch.logaddexp(FCYeast_simulator.autofluo.sample((n))[0],torch.log(I_prot))
 
 

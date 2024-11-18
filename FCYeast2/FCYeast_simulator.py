@@ -1,5 +1,4 @@
 import torch
-
 import sys
 import os
 c_directory = os.getcwd()
@@ -12,13 +11,11 @@ device = torch.device('cuda' if torch.cuda.is_available() and enable_cuda else '
 
 eZsamplers.adjust_device(device)
 
-xi = 0.05
 
 autofluo = architecture.make_model(conditional=False)
 autofluo.load_state_dict(torch.load('autofluorescence.pt'))
 for param in autofluo.parameters():
     param.requires_grad = False
-
 
 def adjust_device(dev):
     global device
@@ -34,7 +31,6 @@ def fix_data_type(lbeta,llam,lsig,n):
 
 
 def sample_initial(beta,lam,rho, n=1024):
-
     fraction_act = (lam[:,1]/lam.sum(dim=1)).reshape(-1,1)
     beta_eff = beta*fraction_act
 
@@ -63,8 +59,10 @@ def simulate_between_cell_div(x,s,T,beta,lam,rho):
         s = torch.where(stop_changing, s, 1 - s)
 
     x += eZsamplers.ap_poisson(rate)
-    x = eZsamplers.ap_binomial(x,rho.sample(x.shape))
     return x,s
+
+def cell_divide(x,rho):
+    return eZsamplers.ap_binomial(x,rho.sample(x.shape))
 
 ind=torch.arange(1024,device=device).reshape(-1,1)
 def adjust_indexes(n):
@@ -94,23 +92,21 @@ def simulator(beta,lam,sig,rho,T=100,n=1024):
         dt_prop[dont_divide] = T[dont_divide]-t[dont_divide] #the ones who overshot time only grow in the time between.
         t += dt_prop
 
-        x_div,s_div = simulate_between_cell_div(x,s,dt_prop,beta,lam,rho)
+        x,s = simulate_between_cell_div(x,s,dt_prop,beta,lam,rho)
+        x = torch.where(dont_divide,x,cell_divide(x,rho))
 
-        x_div[dont_divide] = x[dont_divide] #the ones who overshot time do not divide, we remove these
-        s_div[dont_divide] = s[dont_divide]
-        x = x_div
-        s = s_div
 
     if torch.any(torch.isnan(x)):
         print('warning, the simulation is returning NaNs')
 
-    I = xi*x + torch.sqrt(xi*x)*torch.randn_like(x)
-    return t,I,s
+    return t,x,s
 
-
+xi = 0.05
+def prot2intensity(Pr,xi=xi,tol=1e-3):
+    return (xi*Pr + torch.sqrt(xi*Pr)*torch.randn_like(Pr)).clamp(xi*tol)
 
 class target():
-    def __init__(self, means = (10,0.,0.,-2.3), sigmas=(3.,1.,1.,.5)):
+    def __init__(self, means = (10,-1.,1.,-2.3), sigmas=(3.,1.,1.,.5)):
         self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.rho = eZsamplers.beta_sym(2.,6.,device=device)
@@ -131,14 +127,9 @@ class target():
             beta,lam,sig = torch.exp(lbeta),torch.exp(llam),torch.exp(lsig)
 
 
-        t,I_prot,s = simulator(beta,lam,sig,rho=self.rho,T=T,n=n)
-        
-        ##Working
-        #I = (torch.exp(autofluo.sample((n))[0]) + I_prot).clamp(1.)
-        #lI = torch.log(I )
-
-        ##Testing
-        lI = torch.logaddexp(autofluo.sample((n))[0],torch.log(I_prot.clamp(xi)))
+        t,Pr,s = simulator(beta,lam,sig,rho=self.rho,T=T,n=n)
+        I_prot = prot2intensity(Pr)
+        lI = torch.logaddexp(autofluo.sample((n))[0],torch.log(I_prot))
         
         if return_lparams:
             return torch.hstack((lI.reshape(-1,1),params))

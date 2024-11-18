@@ -171,7 +171,7 @@ for i in range(100000):
         #print(i,param,lp)
 
 # %%
-np.savetxt('FC3_mcmc/results_{}seed_{}data_{}dp.csv'.format(seed,data_seed,N),
+np.savetxt('FCYeast2_MCMC/mcmc_synth_results_{}seed_{}data_{}dp.csv'.format(seed,data_seed,N),
            np.hstack((np.stack(sampled_params), np.array(sampled_logpost).reshape(-1,1))))
 
 # %%
@@ -199,11 +199,6 @@ params = FCYeast2_simulator.transform_to_arbitrary(best_param)
 x
 
 plt.legend()
-
-# %%
-'FC3_mcmc/results_{}seed_{}data_{}dp.csv'.format(seed,data_seed,N),
-
-# %%
 
 
 
