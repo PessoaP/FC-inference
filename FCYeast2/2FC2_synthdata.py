@@ -26,7 +26,7 @@ if seed == 0:
 
 
 else:
-    gt = target.params_dist.sample((1,))[0]
+    gt = torch.round(target.params_dist.sample((1,))[0],decimals=4)
     dv = np.loadtxt('FCYeast2_synth/gt_map.csv')
     np.savetxt('FCYeast2_synth/gt_map.csv', np.vstack((dv,np.hstack((np.array((seed)),gt.cpu().numpy())))) )
 

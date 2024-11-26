@@ -77,10 +77,9 @@ def random_binary(n, bits, zero_first = True):
 
 
 
-class delta():
-    #makes a distribution that always sample x0
+class delta(torch.distributions.Distribution):
+    # A distribution that always samples x0
     def __init__(self, x0, device='cpu'):
-        #super(delta,self).__init__()
         self.x0 = torch.tensor(x0).to(device)
     
     def sample(self,shape):
@@ -90,7 +89,7 @@ class delta():
         return torch.where(x==self.x0, 0., -torch.inf)
     
     
-class beta_sym():
+class beta_sym(torch.distributions.Distribution):
     def __init__(self, alpha, beta, device='cpu'):
         self.alpha,self.beta = torch.tensor(alpha).to(device), torch.tensor(beta).to(device)
         self.dist = torch.distributions.Beta(self.alpha,self.beta)
