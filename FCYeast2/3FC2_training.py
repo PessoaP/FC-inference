@@ -50,7 +50,7 @@ max_iter   = 1000
 show_iter  = 100
 
 n_batch    = 16
-x = target.sample(n=1024*1024)
+x = target.sample(N=1024*1024)
 batch_size = x.size(0)//n_batch
 
 x,context = x[:,0].reshape(-1,1)*1.0,x[:,1:]

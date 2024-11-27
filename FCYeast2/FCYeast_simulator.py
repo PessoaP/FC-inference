@@ -24,7 +24,7 @@ def adjust_device(dev):
     eZsamplers.adjust_device(dev)
     device = dev
 
-def fix_data_type(lbeta,llam,lsig,n):    
+def fix_data_type(lbeta,llam,lsig,N):    
     lbeta = lbeta*torch.ones((N,1),device=device)
     llam = llam*torch.ones((N,2),device=device)
     lsig = lsig*torch.ones((N,1),device=device)
@@ -34,7 +34,7 @@ ind=torch.arange(1024,device=device).reshape(-1,1)
 def adjust_indexes(N):
     global ind
     if (ind.dim != 1) or (ind.shape[0]!=N) :
-        ind=torch.arange(n,device=device).reshape(-1,1)
+        ind=torch.arange(N,device=device).reshape(-1,1)
 
 
 def sample_initial(beta,lam,rho, N=1024):
@@ -56,7 +56,7 @@ def simulate_between_cell_div(x,s,T,beta,lam,rho):
     # `T` means time until division or the simulation end time. (`dt`` in the `simulator`` function) 
     t = torch.zeros_like(T)  
     rate = torch.zeros_like(x)
-    #stop_changing = t>T
+    stop_changing = t>T
 
     while not(torch.all(stop_changing)):
         dt_prop = eZsamplers.exponential(lam[ind,s]) #Samples the time until the next state switch
@@ -108,8 +108,12 @@ xi = 0.05 #Value obtained from
 def prot2intensity(Pr,xi=xi,tol=1e-3):
     return (xi*Pr + torch.sqrt(xi*Pr)*torch.randn_like(Pr)).clamp(xi*tol)
 
+
+default_means = (10,-1.,1.,-2.3)
+default_sigmas = (3.,1.5,1.5,.75)
+
 class target():
-    def __init__(self, means = (10,-1.,1.,-2.3), sigmas=(3.,1.,1.,.75)):
+    def __init__(self, means = default_means, sigmas=default_sigmas):
         self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.rho = eZsamplers.beta_sym(2.,6.,device=device)
@@ -118,7 +122,7 @@ class target():
         return self.prior.log_prob(x)
         
     def sample(self, lbeta=None, llam=None, lsig=None,  T=100, N=1024,return_lparams=True):
-        #The sample parameters are 
+        # The sample parameters are:
         #1 - lbeta: log(base e) of the protein production rate,
         #2 - llam: 2value with the log(base e) activation and inactivation rates respectively, 
         #3 - lsig: log(base e) of the variance in cell division.
