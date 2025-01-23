@@ -42,7 +42,7 @@ model.q0.loc = data.mean().item() + model.q0.loc
 
 # %%
 loss_hist = []
-optimizer = torch.optim.Adam(model.parameters(), lr=1/data.numel(), weight_decay=1e-6)
+optimizer = torch.optim.Adam(model.parameters(), lr=5/data.numel(), weight_decay=1e-6)
 
 # %%
 #fig, ax = plt.subplots()
@@ -55,10 +55,7 @@ for it in tqdm(range(1000)):
         optimizer.step()
         
         loss_hist.append( 1.0*loss.to('cpu').item())
-    #if (it) % 100 == 0:
-    #    with torch.no_grad():
-    #        make_model_graph(model,ax)
-    #        print(loss.item())
+
     del loss
 
 # %%
@@ -66,6 +63,7 @@ for it in tqdm(range(1000)):
 make_model_graph(model)
 
 torch.save(model.state_dict(), 'autofluorescence.pt')
+
 
 
 

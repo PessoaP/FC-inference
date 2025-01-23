@@ -11,6 +11,9 @@ import FCYeast_simulator
 enable_cuda=True
 device = torch.device('cuda' if torch.cuda.is_available() and enable_cuda else 'cpu')
 
+default_means = (torch.tensor(FCYeast_simulator.default_means)[[0,1,2,3,1,2,3]] ).to(device)
+default_sigmas =(torch.tensor(FCYeast_simulator.default_sigmas)[[0,1,2,3,1,2,3]] ).to(device)
+
 def adjust_device(dev):
     global device,dils,s_indices1,s_indices2,s_indices3,to_arbitrary
     FCYeast_simulator.adjust_device(dev)
@@ -39,20 +42,21 @@ def adjust_indexes(n):
         ind=torch.arange(n,device=device)
 
 class target():
-    def __init__(self, means = FCYeast_simulator.default_means,
-                 sigmas=FCYeast_simulator.default_sigmas):
-        self.t_base = FCYeast_simulator.target(means,sigmas)
-        means = self.t_base.prior.loc[[0,1,2,3,1,2,3]] 
-        sigmas = torch.sqrt(self.t_base.prior.covariance_matrix.diag())[[0,1,2,3,1,2,3]] 
+    def __init__(self, means = default_means,
+                 sigmas=default_sigmas):
+        # self.t_base = FCYeast_simulator.target(means,sigmas)
+        # means = self.t_base.prior.loc[[0,1,2,3,1,2,3]] 
+        # sigmas = torch.sqrt(self.t_base.prior.covariance_matrix.diag())[[0,1,2,3,1,2,3]] 
 
-        self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).clone().detach().to(device), torch.diag(torch.tensor(sigmas)**2).clone().detach().to(device))
-        self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).clone().detach().to(device), torch.diag(torch.tensor(sigmas)**2).clone().detach().to(device))
+        self.prior = torch.distributions.MultivariateNormal((means).clone().detach().to(device), torch.diag((sigmas)**2).clone().detach().to(device))
+        self.params_dist = torch.distributions.MultivariateNormal((means).clone().detach().to(device), torch.diag((sigmas)**2).clone().detach().to(device))
         self.rho = eZsamplers.beta_sym(2.,6.,device=device)
 
 
-    def sample(self, lbetas=None, llams=None, lsigs=None,  T=100, n=1024,return_lparams=True):
-        if lbetas == None:
-            params = self.params_dist.sample((n,))
+    def sample(self, lbetas=None, llams=None, lsigs=None,  T=100, N=1024,return_lparams=True):
+        
+        if lbetas == None: #no parameters provided
+            params = self.params_dist.sample((N,))
             params_sep = transform_to_arbitrary(params)
 
             betas = torch.exp(params_sep[:,:1])
@@ -60,15 +64,21 @@ class target():
             sigs  = torch.exp(params_sep[:,3:4])
 
         else:
-            betas,lams,sigs = torch.exp(lbetas),torch.exp(llams),torch.exp(lsigs)
+            if llams == None: #assume parameters were provided together as first argument (lbetas)  
+                    params = lbetas
+                    betas = torch.exp(params[:,:1])
+                    lams  = torch.exp(params[:,1:3])
+                    sigs  = torch.exp(params[:,3:4])
+            else:
+                betas,lams,sigs = torch.exp(lbetas),torch.exp(llams),torch.exp(lsigs)
 
         lIs =[]
         for (beta,lam,sig) in zip(betas,lams,sigs):
-            beta,lam,sig,n = FCYeast_simulator.fix_data_type(beta,lam,sig,n)
+            beta,lam,sig,n = FCYeast_simulator.fix_data_type(beta,lam,sig,N)
 
-            t,Pr,s = FCYeast_simulator.simulator(beta,lam,sig,rho=self.rho,T=T,n=n)
+            t,Pr,s = FCYeast_simulator.simulator(beta,lam,sig,rho=self.rho,T=T,N=n)
             I_prot = FCYeast_simulator.prot2intensity(Pr)
-            lI = torch.logaddexp(FCYeast_simulator.autofluo.sample((n))[0],torch.log(I_prot))
+            lI = torch.logaddexp(FCYeast_simulator.autofluo.sample((N))[0],torch.log(I_prot))
 
             lIs.append(lI.reshape(-1,1))
 

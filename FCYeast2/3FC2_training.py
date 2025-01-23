@@ -21,18 +21,18 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # %%
 dil= sys.argv[1]
-dil_factor = int(dil)/100
 folder = 'dilution'+dil
 model_file = folder+'/network.pt'
 figs_direc = folder+'/network_perform'
 
+estimates = torch.load('ABC_estimates.pt')
+means = estimates['{}dilution'.format(dil)]
+sigmas = 1.+means*0
+
 # %%
 # Define target
 FCYeast_simulator.adjust_device(device)
-target = FCYeast_simulator.target()
-
-target.prior.loc[0]-=torch.log(torch.tensor(dil_factor,device=device))
-target.params_dist.loc = target.prior.loc
+target = FCYeast_simulator.target(means=means,sigmas=sigmas)
 
 
 # %%
@@ -101,7 +101,7 @@ for it in tqdm(range(max_iter)):
         
     else:
         with torch.no_grad():
-            samples_new = target.sample(n=64*1024)
+            samples_new = target.sample(N=16*1024)
 
             x[:samples_new.size(0)] = samples_new[:,0].reshape((-1,1))
             context[:samples_new.size(0)] = samples_new[:,1:]
@@ -109,7 +109,7 @@ for it in tqdm(range(max_iter)):
             shuffle_index = torch.randperm(x.size(0))
             x = (x[shuffle_index]).contiguous()
             context = (context[shuffle_index]).contiguous()
-            
+
 
 # %%
 torch.save(model.state_dict(), model_file)

@@ -11,6 +11,10 @@ device = torch.device('cuda' if torch.cuda.is_available() and enable_cuda else '
 
 eZsamplers.adjust_device(device)
 
+
+default_means = (10,-1.,1.,-2.3)
+default_sigmas = (3.,.5,.5,.75)
+
 #Loads the distribution of autofluorescence
 autofluo = architecture.make_model(conditional=False)
 autofluo.load_state_dict(torch.load('autofluorescence.pt'))
@@ -76,7 +80,7 @@ def cell_divide(x,rho):
     return eZsamplers.ap_binomial(x,rho.sample(x.shape))
     
 def simulator(beta,lam,sig,rho,T=100,N=1024):
-    beta,lam,sig,n = fix_data_type(beta,lam,sig,N)
+    beta,lam,sig,N = fix_data_type(beta,lam,sig,N)
     div_time_dist = torch.distributions.LogNormal(0., sig)
     adjust_indexes(N)    
 
@@ -90,13 +94,17 @@ def simulator(beta,lam,sig,rho,T=100,N=1024):
     while not(torch.all(dont_divide)):
         dt_prop = div_time_dist.sample() #Sample the time at which we have the next cell division
         t_prop = t + dt_prop
-        dont_divide = t_prop > T # indices where we already reach T means the cell do not divide
+        dont_divide = t_prop >= T # indices where we already reach T means the cell do not divide
 
         dt_prop[dont_divide] = T[dont_divide]-t[dont_divide] #The ones who overshot time only grow in the time between.
         t += dt_prop
 
         x,s = simulate_between_cell_div(x,s,dt_prop,beta,lam,rho)
         x = torch.where(dont_divide,x,cell_divide(x,rho)) #If the cell divides, reduce the number accordingly
+        # print((1.*dont_divide).sum(),t.mean())
+        # print((t[~dont_divide])[:10])
+        # print(sig[~dont_divide][:10])
+        # print(dt_prop[~dont_divide][:10])
 
 
     if torch.any(torch.isnan(x)):
@@ -108,9 +116,6 @@ xi = 0.05 #Value obtained from
 def prot2intensity(Pr,xi=xi,tol=1e-3):
     return (xi*Pr + torch.sqrt(xi*Pr)*torch.randn_like(Pr)).clamp(xi*tol)
 
-
-default_means = (10,-1.,1.,-2.3)
-default_sigmas = (3.,1.5,1.5,.75)
 
 class target():
     def __init__(self, means = default_means, sigmas=default_sigmas):
@@ -138,13 +143,13 @@ class target():
             sig  = torch.exp(params[:,3:4])
 
         else:
-            lbeta,llam,lsig,void= fix_data_type(lbeta,llam,lsig,n)
+            lbeta,llam,lsig,void= fix_data_type(lbeta,llam,lsig,N)
             beta,lam,sig = torch.exp(lbeta),torch.exp(llam),torch.exp(lsig)
 
         t,Pr,s = simulator(beta,lam,sig,rho=self.rho,T=T,N=N) #Simulator returns the times, final number of protein and final state
         I_prot = prot2intensity(Pr) #We turn the number of protein into an intensity for protein only
         lI = torch.logaddexp(autofluo.sample((N))[0],torch.log(I_prot)) #Have the log of the total intensity by taking the log of a sample of autofluorescence plus the protein intensity.
-        
+                
         if return_lparams:
             return torch.hstack((lI.reshape(-1,1),params))
 
