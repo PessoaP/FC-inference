@@ -44,10 +44,6 @@ def adjust_indexes(n):
 class target():
     def __init__(self, means = default_means,
                  sigmas=default_sigmas):
-        # self.t_base = FCYeast_simulator.target(means,sigmas)
-        # means = self.t_base.prior.loc[[0,1,2,3,1,2,3]] 
-        # sigmas = torch.sqrt(self.t_base.prior.covariance_matrix.diag())[[0,1,2,3,1,2,3]] 
-
         self.prior = torch.distributions.MultivariateNormal((means).clone().detach().to(device), torch.diag((sigmas)**2).clone().detach().to(device))
         self.params_dist = torch.distributions.MultivariateNormal((means).clone().detach().to(device), torch.diag((sigmas)**2).clone().detach().to(device))
         self.rho = eZsamplers.beta_sym(2.,6.,device=device)

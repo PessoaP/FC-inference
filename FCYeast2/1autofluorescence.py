@@ -45,8 +45,6 @@ loss_hist = []
 optimizer = torch.optim.Adam(model.parameters(), lr=5/data.numel(), weight_decay=1e-6)
 
 # %%
-#fig, ax = plt.subplots()
-#plt.ion()
 for it in tqdm(range(1000)):
     optimizer.zero_grad()
     loss = -model.log_prob(data).mean()

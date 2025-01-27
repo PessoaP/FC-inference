@@ -101,11 +101,6 @@ def simulator(beta,lam,sig,rho,T=100,N=1024):
 
         x,s = simulate_between_cell_div(x,s,dt_prop,beta,lam,rho)
         x = torch.where(dont_divide,x,cell_divide(x,rho)) #If the cell divides, reduce the number accordingly
-        # print((1.*dont_divide).sum(),t.mean())
-        # print((t[~dont_divide])[:10])
-        # print(sig[~dont_divide][:10])
-        # print(dt_prop[~dont_divide][:10])
-
 
     if torch.any(torch.isnan(x)):
         print('warning, the simulation is returning NaNs')

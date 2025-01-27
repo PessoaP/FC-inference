@@ -48,8 +48,8 @@ def logprior(params):
 # %%
 def histogram_gpu(data,bins):
     bins = bins.reshape(-1,1)
-    arr1 = data>bins[:-1]
-    arr2 = data<=bins[1:]
+    arr1 = data > bins[:-1]
+    arr2 = data <= bins[1:]
     arr = torch.logical_and(arr1,arr2)
     ans = arr.sum(axis=1)
     del arr1

@@ -6,8 +6,8 @@ from eZsamplers import random_binary
 
 def make_plot(ax,th,model,target):
     values = th.cpu().numpy()
-    n=2**15
-    x = target.sample(th[:1], th[1:3], th[3:4],n=n,return_lparams=False)
+    N=2**15
+    x = target.sample(th[:1], th[1:3], th[3:4],N=N,return_lparams=False)
     ax.set_title(r'$\Psi_{{\beta}}$ = {:.2f} $\Psi_{{\lambda_{{act}}}}$ = {:.2f} $\Psi_{{\lambda_{{ina}}}}$  = {:.2f} $\Psi_{{\sigma}}$  = {:.2f}  '.format(*values))
     
     xx = torch.linspace(x.min()*.95,x.max()*1.05,201,device=th.device) 
