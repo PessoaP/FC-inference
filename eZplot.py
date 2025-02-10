@@ -8,7 +8,8 @@ def make_plot(ax,th,model,target):
     values = th.cpu().numpy()
     N=2**15
     x = target.sample(th[:1], th[1:3], th[3:4],N=N,return_lparams=False)
-    ax.set_title(r'$\Psi_{{\beta}}$ = {:.2f} $\Psi_{{\lambda_{{act}}}}$ = {:.2f} $\Psi_{{\lambda_{{ina}}}}$  = {:.2f} $\Psi_{{\sigma}}$  = {:.2f}  '.format(*values))
+    print(x)
+    #ax.set_title(r'$\Psi_{{\beta}}$ = {:.2f} $\Psi_{{\lambda_{{act}}}}$ = {:.2f} $\Psi_{{\lambda_{{ina}}}}$  = {:.2f} $\Psi_{{\sigma}}$  = {:.2f}  '.format(*values))
     
     xx = torch.linspace(x.min()*.95,x.max()*1.05,201,device=th.device) 
     ly = model.log_prob(xx.reshape(-1,1), th.repeat(xx.size(0),1)).detach()
@@ -24,7 +25,7 @@ def make_plot(ax,th,model,target):
     
     ax.legend()
 
-def plots_graph(ax,model,target,num_plots=6,system='BSCD'):
+def plots_graph(ax,model,target,num_plots=6):
     model.eval()
     mu = target.params_dist.loc
     sig= (target.params_dist.covariance_matrix.diag())**(.5)

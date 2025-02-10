@@ -74,6 +74,11 @@ def random_binary(n, bits, zero_first = True):
     if zero_first:
         nums[0] = 0
     return int_to_binary(nums, bits)
+# def random_binary(n,bits):
+#     seq = ((torch.randn(n,bits))<0).int()
+#     print(seq)
+#     sorted_indices = torch.argsort(-torch.sum(seq*(2**torch.arange(bits)), dim=1))
+#     return seq[sorted_indices]
 
 
 

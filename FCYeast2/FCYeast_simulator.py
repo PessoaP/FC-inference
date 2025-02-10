@@ -16,10 +16,13 @@ default_means = (10,-1.,1.,-2.3)
 default_sigmas = (3.,.5,.5,.75)
 
 #Loads the distribution of autofluorescence
-autofluo = architecture.make_model(conditional=False)
-autofluo.load_state_dict(torch.load('autofluorescence.pt'))
-for param in autofluo.parameters():
-    param.requires_grad = False
+try:
+    autofluo = architecture.make_model(conditional=False)
+    autofluo.load_state_dict(torch.load('autofluorescence.pt'))
+    for param in autofluo.parameters():
+        param.requires_grad = False
+except:
+    print('Unable to load autofluorescence distribution')
 
 
 #These functions are not very important, they are only necessary to guarantee the code works correctly on the GPU.

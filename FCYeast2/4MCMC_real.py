@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import normflows as nf
 
-seed = 42
+seed = 99
 torch.manual_seed(seed)
 torch.no_grad()
 

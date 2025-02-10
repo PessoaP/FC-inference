@@ -5,20 +5,30 @@ latent_size = 1
 context_size = 4
 
 def make_model(device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
+               context_size=4,
                hidden_layers=5,
+               spline_hidden_dims = [64, 128, 256, 512],
+               tail_bound = 30,
                conditional=True):
         
     q0 = nf.distributions.DiagGaussian(1)
 
-    flows = [nf.flows.AutoregressiveRationalQuadraticSpline(latent_size, hidden_layers, 64,num_context_channels=context_size,tail_bound=30),
-             nf.flows.LULinearPermute(latent_size),
-             nf.flows.AutoregressiveRationalQuadraticSpline(latent_size, hidden_layers, 128,num_context_channels=context_size,tail_bound=30),
-             nf.flows.LULinearPermute(latent_size),
-             nf.flows.AutoregressiveRationalQuadraticSpline(latent_size, hidden_layers, 256,num_context_channels=context_size,tail_bound=30),
-             nf.flows.LULinearPermute(latent_size),      
-             nf.flows.AutoregressiveRationalQuadraticSpline(latent_size, hidden_layers, 512,num_context_channels=context_size,tail_bound=30),
-             nf.flows.LULinearPermute(latent_size)
-             ]
+    # flows = [nf.flows.AutoregressiveRationalQuadraticSpline(latent_size, hidden_layers, 64,num_context_channels=context_size,tail_bound=30),
+    #          nf.flows.LULinearPermute(latent_size),
+    #          nf.flows.AutoregressiveRationalQuadraticSpline(latent_size, hidden_layers, 128,num_context_channels=context_size,tail_bound=30),
+    #          nf.flows.LULinearPermute(latent_size),
+    #          nf.flows.AutoregressiveRationalQuadraticSpline(latent_size, hidden_layers, 256,num_context_channels=context_size,tail_bound=30),
+    #          nf.flows.LULinearPermute(latent_size),      
+    #          nf.flows.AutoregressiveRationalQuadraticSpline(latent_size, hidden_layers, 512,num_context_channels=context_size,tail_bound=30),
+    #          nf.flows.LULinearPermute(latent_size)
+    #          ]
+
+    flows = []
+    for hidden_dim in spline_hidden_dims:
+        flows.append(nf.flows.AutoregressiveRationalQuadraticSpline(
+            latent_size, hidden_layers, hidden_dim, num_context_channels=context_size, tail_bound=tail_bound
+        ))
+        flows.append(nf.flows.LULinearPermute(latent_size))
 
     if conditional:
         model = nf.ConditionalNormalizingFlow(q0, flows)
