@@ -37,14 +37,17 @@ def sample_initial(beta,rho=.5,N=1024):
     x = eZsamplers.ap_poisson(rate)
 
     return tau,x
-    
+
 def simulate_between_cell_div(x,dt,beta,rho=.5):    
     x += eZsamplers.ap_poisson(beta*dt)#counts increase poisson in between cell div
-    x =  eZsamplers.ap_binomial(x,rho*torch.ones_like(x))# divide all cells
+    #x =  eZsamplers.ap_binomial(x,rho*torch.ones_like(x))# divide all cells
     return x
+def cell_divide(x,rho=.5):
+    # Samples of rho are the volume ratio of cells before and after division, as such each protein will have a probability rho.sample of being in the cell aafter division
+    return eZsamplers.ap_binomial(x,rho*torch.ones_like(x))
+
 
 def simulator(beta,sig,rho=.5,T=100,N=1024):
-    
     beta,sig = fix_data_type(beta,sig,N)
     div_time_dist = torch.distributions.LogNormal(0., sig) #dist from which we sample the next division.
 
@@ -61,16 +64,13 @@ def simulator(beta,sig,rho=.5,T=100,N=1024):
         t_prop = t + dt_prop
         dont_divide = t_prop > T #inds are indices where we already reach T.
 
-        #dt_prop[dont_divide] = (T-t)[dont_divide] #the ones who overshot time only grow in the time between.
         dt_prop[dont_divide] = T[dont_divide]-t[dont_divide] #the ones who overshot time only grow in the time between.
         t += dt_prop
 
-        x_div = simulate_between_cell_div(x,dt_prop,beta,rho=.5)
-
-        x_div[dont_divide] = x[dont_divide] # the ones who overshot time do not divide, we remove these
-        x = x_div
-        
-    return t,x
+        x = simulate_between_cell_div(x,dt_prop,beta,rho)
+        x = torch.where(dont_divide,x,cell_divide(x,rho)) #If the cell divides, reduce the number accordingly
+       
+    return x
 
 
 class target():
@@ -103,7 +103,7 @@ class target():
  
         beta,sig = torch.exp(lbeta),torch.exp(lsig)
  
-        t,x = simulator(beta,sig,T=T,N=N)
+        x = simulator(beta,sig,T=T,N=N)
 
         lx = torch.log(x.clamp(1.))
 
