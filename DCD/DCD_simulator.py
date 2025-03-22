@@ -17,9 +17,7 @@ def fix_data_type(beta,n):
 
 
 def simulator(beta,rho=.5,N=1024):
-    
     beta = fix_data_type(beta,N)
-
     tau = torch.rand(beta.shape,device=device)
     rate = beta*(1+tau)
     x = eZsamplers.ap_poisson(rate)
