@@ -4,11 +4,11 @@ from matplotlib import pyplot as plt
 from eZsamplers import random_binary
 
 
-def make_plot(ax,th,model,target):
+def make_plot(ax,th,model,target,legend=True):
     values = th.cpu().numpy()
     N=2**15
     x = target.sample(th[:1], th[1:3], th[3:4],N=N,return_lparams=False)
-    print(x)
+    #print(x)
     #ax.set_title(r'$\Psi_{{\beta}}$ = {:.2f} $\Psi_{{\lambda_{{act}}}}$ = {:.2f} $\Psi_{{\lambda_{{ina}}}}$  = {:.2f} $\Psi_{{\sigma}}$  = {:.2f}  '.format(*values))
     
     xx = torch.linspace(x.min()*.95,x.max()*1.05,201,device=th.device) 
@@ -20,10 +20,15 @@ def make_plot(ax,th,model,target):
     y = torch.exp(ly-ly.max())
     y = y/(y.sum()*dx)
 
-    ax.plot(xx,y,label='NN likelihood')
-    ax.hist(x.reshape((1,-1)),density=True,bins=35,label='Simulation')
+    if legend:
+        ax.plot(xx,y,label='NN likelihood')
+        ax.hist(x.reshape((1,-1)),density=True,bins=35,label='Simulation',alpha=.8)   
+        ax.legend()
+
+    else:
+        ax.plot(xx,y)
+        ax.hist(x.reshape((1,-1)),density=True,bins=35,alpha=.8)
     
-    ax.legend()
 
 def plots_graph(ax,model,target,num_plots=6):
     model.eval()

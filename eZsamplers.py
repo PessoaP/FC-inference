@@ -91,7 +91,7 @@ class delta(torch.distributions.Distribution):
         return self.x0 + torch.zeros(shape,device=self.x0.device)
     
     def log_prob(self,x):
-        return torch.where(x==self.x0, 0., -torch.inf)
+        return torch.where(x==self.x0, torch.inf, -torch.inf)
     
     
 class beta_sym(torch.distributions.Distribution):
