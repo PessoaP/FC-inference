@@ -59,13 +59,8 @@ for xi in x_full:
     x.append(torch.log(xi[indi]))
 N=int(N*frac)
 
-# %%
-# l,s = target.prior.loc, torch.sqrt(target.prior.covariance_matrix.diag())
-# zf = lambda params: (params-l)/s
+
 def logprior(params):
-    # z = zf(params)
-    # if torch.any(torch.abs(z)>3.01):
-    #     return - torch.inf
     return target.prior.log_prob(params) 
 
 vectorize_params = [torch.ones(xi.size(0),4).to(device) for xi in x]
