@@ -38,6 +38,8 @@ def fix_data_type(lbeta,llam,lsig,N):
     lsig = lsig*torch.ones((N,1),device=device)
     return lbeta,llam,lsig,lsig.size()[0]
 
+
+
 ind=torch.arange(1024,device=device).reshape(-1,1)
 def adjust_indexes(N):
     global ind
@@ -49,8 +51,14 @@ def sample_initial(beta,lam,rho, N=1024):
     #Here it samples an initial state.
     #Heuristically, we use the ratio equivalent to the fraction of time spent in active state of the non stochastic cell div.
     #This will be ``close enough'' not to bias the steady-state obtained.
+    
     fraction_act = (lam[:,1]/lam.sum(dim=1)).reshape(-1,1)
-    beta_eff = beta*fraction_act
+    
+    #For SI, in case the beta has 2 states. 
+    if beta.ndim == 1 or beta.shape[-1] == 1:
+        beta_eff = beta * fraction_act
+    else:
+        beta_eff = (1 - fraction_act) * beta[:, [0]] + fraction_act * beta[:, [1]]
 
     tau = torch.rand(beta_eff.shape,device=device)
     rate = beta_eff*(1+tau)
@@ -73,7 +81,14 @@ def simulate_between_cell_div(x,s,T,beta,lam,rho):
         dt_prop[stop_changing] = T[stop_changing]-t[stop_changing]
         t += dt_prop #Moves time either to the next state switch or the next cell division, whichever is closer
 
-        rate+=beta*dt_prop*((s==1).int()) # Adds to the rate only if the cell were in the active state
+        #rate+=beta*dt_prop*((s==1).int()) # Adds to the rate only if the cell were in the active state
+        
+        if beta.ndim == 1 or beta.shape[-1] == 1:
+            rate += beta * dt_prop * (s == 1)
+        else:
+            rate += beta[ind, s] * dt_prop
+
+        
         s = torch.where(stop_changing, s, 1 - s) #If it switches states, switch state
 
     x += eZsamplers.ap_poisson(rate) #Since the sum of Poisson is Poisson with the sum of rates, it is enough to just sample the protein production once.
@@ -83,9 +98,11 @@ def cell_divide(x,rho):
     # Samples of rho are the volume ratio of cells before and after division, as such each protein will have a probability rho.sample of being in the cell aafter division
     return eZsamplers.ap_binomial(x,rho.sample(x.shape))
     
-def simulator(beta,lam,sig,rho,T=100,N=1024):
+def simulator(beta,lam,sig,rho=eZsamplers.beta_sym(2.,6.,device=device),T=100,N=1024):
     beta,lam,sig,N = fix_data_type(beta,lam,sig,N)
-    div_time_dist = torch.distributions.LogNormal(0., sig)
+    nu = torch.pow(sig,-2)
+    div_time_dist = torch.distributions.Gamma(nu,nu)
+
     adjust_indexes(N)    
 
     tau,x,s = sample_initial(beta,lam,rho,N)

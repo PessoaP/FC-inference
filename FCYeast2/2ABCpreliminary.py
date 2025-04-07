@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import normflows as nf
 import pandas as pd
+from tqdm import tqdm
+import time
 
 seed = 10
 torch.manual_seed(seed)
@@ -21,6 +23,7 @@ import architecture
 enable_cuda = True
 CUDA_LAUNCH_BLOCKING=1
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+initial_time=time.time()
 
 # %%
 dils_str = ['12','23']
@@ -37,10 +40,15 @@ for xi in x:
     h.append(hi)
     bins.append(torch.tensor(bi).to(device)) #bi will be compared to simulations, keep here
 
+
 # %%
-default_means =  (10.,-1.,1. ,-2.3,-1.,1. ,-2.3)
-default_sigmas = ( 3.,1.5,1.5,1.0,1.5,1.5,1.0)
+# default_means =  torch.tensor((10.,-1.,1. ,-2.3,-1.,1. ,-2.3),device=device)
+# default_sigmas = torch.tensor(( 3.,1.5,1.5,1.0,1.5,1.5,1.0),device=device)
+# target = FCYeast2_simulator.target(means=default_means,sigmas=default_sigmas)
+default_means = torch.tensor( (10,0,0,-2.3,0,0,-2.3) ).to(device)
+default_sigmas = torch.tensor( (3.,1,1,1,1,1,1) ).to(device)
 target = FCYeast2_simulator.target(means=default_means,sigmas=default_sigmas)
+
 
 def logprior(params):
     return target.prior.log_prob(params)
@@ -79,6 +87,7 @@ def ABC_log_post(params,lprior=logprior):
 
 # %%
 params_1k = target.prior.sample((1000,))
+print(params_1k.mean(axis=0))
 best_param = target.prior.loc
 lp_max = ABC_log_post(best_param)
 
@@ -102,13 +111,14 @@ sampled_logpost = [lp.item()]
 
 # %%
 S = (3.14)*torch.eye(7)*1e-4
+S = torch.eye(7)*1e-3
 mvn = torch.distributions.MultivariateNormal(torch.zeros(7,device=device),S.to(device))
 
 def proposal(param):
     return param + mvn.sample()
 
 # %%
-for i in range(100000):
+for i in tqdm(range(10000)):
     lp = ABC_log_post(param) #resample approximation
     param_prop = proposal(param)
     lp_prop = ABC_log_post(param_prop)
@@ -130,8 +140,11 @@ np.savetxt('FCYeast2_MCMC/ABC_results_{}.csv'.format(seed),
 # %%
 #Save results for easy acess
 means = np.stack(sampled_params).mean(axis=0).round(decimals=1)
-dictionary = {'training_means': means, 'training_sigmas': np.ceil(np.abs(np.stack(sampled_params).std(axis=0)))}
+sigs =  (np.stack(sampled_params).std(axis=0)).clip(.5)
+dictionary = {'training_means': means, 'training_sigmas':sigs}
 [dictionary.update({'{}dilution'.format(dil): tensor}) for(dil,tensor) in zip(dils_str,FCYeast2_simulator.transform_to_arbitrary(torch.tensor(means).to(device)).cpu().numpy())]
 torch.save(dictionary, 'ABC_estimates.pt')
+
+print('Totaltime',time.time()-initial_time)
 
 

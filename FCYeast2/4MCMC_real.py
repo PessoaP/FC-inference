@@ -2,8 +2,9 @@
 import torch
 import numpy as np
 import normflows as nf
+from tqdm import tqdm
 
-seed = 99
+seed = 1337
 torch.manual_seed(seed)
 torch.no_grad()
 
@@ -19,15 +20,18 @@ import architecture
 enable_cuda = True
 CUDA_LAUNCH_BLOCKING=1
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-perc = sys.argv[1]
-frac = int(perc)/100
+try:
+    perc = sys.argv[1]
+    frac = int(perc)/100
+except:
+    frac = 1.
 # %%
 
 estimates = torch.load('ABC_estimates.pt')
-means = estimates['training_means']
-sigmas = estimates['training_sigmas']
-target = FCYeast2_simulator.target()
+means_ABC = torch.tensor(estimates['training_means']).to(device)
+sigmas_ABC = torch.tensor(estimates['training_sigmas']).to(device)
+target = FCYeast2_simulator.target(means_ABC,sigmas_ABC)
+print(means_ABC,sigmas_ABC)
 
 # %%
 dils_str = ['12','23']
@@ -61,6 +65,8 @@ N=int(N*frac)
 
 
 def logprior(params):
+    if torch.any(torch.abs(params-means_ABC)/sigmas_ABC > 3):
+        return -torch.inf
     return target.prior.log_prob(params) 
 
 vectorize_params = [torch.ones(xi.size(0),4).to(device) for xi in x]
@@ -84,7 +90,7 @@ lp_max = log_post(x,best_param,models)
 
 for i in range(1,11):
     print(i)
-    for par in (1/i)*(params_1k-target.prior.loc) + best_param:
+    for par in ( (1/i)*(params_1k-target.prior.loc) + best_param ):
         lp_par = log_post(x,par,models)
         if lp_par>=lp_max:
             best_param = par
@@ -145,7 +151,7 @@ while count_of_safe <=10:
     
 # %%
 burnin = len(sampled_logpost)
-for i in range(100000):
+for i in tqdm(range(100000)):
     param_prop = proposal(param)
     lp_prop = log_post(x,param_prop,models)
 

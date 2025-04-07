@@ -49,7 +49,8 @@ def cell_divide(x,rho=.5):
 
 def simulator(beta,sig,rho=.5,T=100,N=1024):
     beta,sig = fix_data_type(beta,sig,N)
-    div_time_dist = torch.distributions.LogNormal(0., sig) #dist from which we sample the next division.
+    nu = torch.pow(sig,-2)
+    div_time_dist = torch.distributions.Gamma(nu,nu) #dist from which we sample the next division.
 
     tau,x = sample_initial(beta,rho)
     t = 1-tau
