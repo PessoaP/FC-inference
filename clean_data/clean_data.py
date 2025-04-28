@@ -64,7 +64,7 @@ def SVM_clean(df,nu=.025,Z_train=True):
     model.fit(Z[keep][test])
     y_pred = model.predict(Z)
 
-
+    print(y_pred.mean())
     
     return model,X,Z,y_pred
 
@@ -77,8 +77,8 @@ indexes = [SVM_clean(df)[-1]==1 for df in (pd1,pd2,pd3)]
 # %%
 def prepgraph(ax,df,indexes,color,label=''):
     ax.scatter(df[indexes[0]],df[indexes[1]],s=6,alpha=.05,color=color,label=label)
-    ax.set_xlabel(indexes[0])
-    ax.set_ylabel(indexes[1])
+    ax.set_xlabel(r'$\log_{10}$' + indexes[0][-4:])
+    ax.set_ylabel(r'$\log_{10}$' + indexes[1][-4:])
 
 def graphs3(ax,df,color,label):
     logdf = take_log(df[['FL1-A','FSC-A','FSC-H']])
@@ -92,9 +92,9 @@ def separated_graphs(ax,df,y):
 
 legend_elements = [
         Line2D([0], [0], marker='o', color='none', label='Removed', 
-               markerfacecolor='r', markersize=10, alpha=1.0),
+               markerfacecolor='b', markersize=10, alpha=1.0),
         Line2D([0], [0], marker='o', color='none', label='Kept', 
-               markerfacecolor='b', markersize=10, alpha=1.0)
+               markerfacecolor='r', markersize=10, alpha=1.0)
     ]
 
 # %%

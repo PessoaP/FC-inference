@@ -20,6 +20,8 @@ def make_plot(ax,th,model,target,legend=True):
     y = torch.exp(ly-ly.max())
     y = y/(y.sum()*dx)
 
+    print('mean',x.mean(),'std',x.std())
+
     if legend:
         ax.plot(xx,y,label='NN likelihood')
         ax.hist(x.reshape((1,-1)),density=True,bins=35,label='Simulation',alpha=.8)   

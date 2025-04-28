@@ -87,7 +87,6 @@ def ABC_log_post(params,lprior=logprior):
 
 # %%
 params_1k = target.prior.sample((1000,))
-print(params_1k.mean(axis=0))
 best_param = target.prior.loc
 lp_max = ABC_log_post(best_param)
 

@@ -19,18 +19,20 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # %%
 def make_model_graph(model):
     x = model.sample(1000)[0]
-    x = torch.linspace(x.min().item(),x.max().item(),101).to(x.device)
+    x = torch.linspace(x.min().item()-1,x.max().item()+1,1001).to(x.device)
     lpx = model.log_prob(x.reshape(-1,1)).detach()
     px = torch.exp(lpx)
 
 
-    plt.plot(x.cpu(),px.cpu(),color='k')
-    plt.hist(data.cpu().reshape(-1),bins=99,density=True)
+    plt.plot(x.cpu(),px.cpu(),color='k',label='Normalizing flow')
+    plt.hist(data.cpu().reshape(-1),bins=40,density=True,label='Intensity at higher dilution')
     plt.draw()
 
     plt.xlabel(r'$\log_{10} I$ (autofluorescence)')
     plt.ylabel("Density")
+    plt.legend()
     plt.savefig('autofluo.png',dpi=600)
+    
 
     plt.close()
 
@@ -42,12 +44,13 @@ data = torch.log(torch.tensor(data).reshape(-1,1)).to(device)
 
 # %%
 model = architecture.make_model(conditional=False)
-model.q0.loc = data.mean().item() + model.q0.loc
+model.q0.loc += data.mean().item() 
+model.q0.log_scale += torch.log(data.std()).item()
 
 
 # %%
 loss_hist = []
-optimizer = torch.optim.Adam(model.parameters(), lr=5/data.numel(), weight_decay=1e-6)
+optimizer = torch.optim.Adam(model.parameters(), lr=1/data.numel())
 
 # %%
 for it in tqdm(range(250)):
