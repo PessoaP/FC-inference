@@ -98,8 +98,9 @@ def cell_divide(x,rho):
     # Samples of rho are the volume ratio of cells before and after division, as such each protein will have a probability rho.sample of being in the cell aafter division
     return eZsamplers.ap_binomial(x,rho.sample(x.shape))
     
-def simulator(beta,lam,sig,rho=eZsamplers.beta_sym(2.,6.,device=device),T=100,N=1024):
+def simulator(beta,lam,sig,rho=eZsamplers.beta_sym(6.,14.,device=device),T=100,N=1024):
     beta,lam,sig,N = fix_data_type(beta,lam,sig,N)
+    
     nu = torch.pow(sig,-2)
     div_time_dist = torch.distributions.Gamma(nu,nu)
 
@@ -137,7 +138,7 @@ class target():
     def __init__(self, means = default_means, sigmas=default_sigmas):
         self.prior = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
         self.params_dist = torch.distributions.MultivariateNormal(torch.tensor(means).to(device), torch.diag(torch.tensor(sigmas)**2).to(device))
-        self.rho = eZsamplers.beta_sym(2.,6.,device=device)
+        self.rho = eZsamplers.beta_sym(6.,14.,device=device)
 
     def log_prior(self,x):
         return self.prior.log_prob(x)

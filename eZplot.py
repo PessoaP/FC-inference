@@ -20,7 +20,7 @@ def make_plot(ax,th,model,target,legend=True):
     y = torch.exp(ly-ly.max())
     y = y/(y.sum()*dx)
 
-    print('mean',x.mean(),'std',x.std())
+    #print('mean',x.mean(),'std',x.std())
 
     if legend:
         ax.plot(xx,y,label='NN likelihood')
