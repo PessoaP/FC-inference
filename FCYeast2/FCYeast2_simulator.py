@@ -6,7 +6,8 @@ import os
 c_directory = os.getcwd()
 sys.path.append(os.path.dirname(c_directory))
 import eZsamplers
-import FCYeast_simulator
+
+from FCYeast import FCYeast_simulator
 
 enable_cuda=True
 device = torch.device('cuda' if torch.cuda.is_available() and enable_cuda else 'cpu')
@@ -46,7 +47,7 @@ class target():
                  sigmas=default_sigmas):
         self.prior = torch.distributions.MultivariateNormal((means).clone().detach().to(device), torch.diag((sigmas)**2).clone().detach().to(device))
         self.params_dist = torch.distributions.MultivariateNormal((means).clone().detach().to(device), torch.diag((sigmas)**2).clone().detach().to(device))
-        self.rho = eZsamplers.beta_sym(2.,6.,device=device)
+        self.rho = eZsamplers.beta_sym(6.,14.,device=device)
 
 
     def sample(self, lbetas=None, llams=None, lsigs=None,  T=100, N=1024,return_lparams=True):
@@ -69,11 +70,15 @@ class target():
                 betas,lams,sigs = torch.exp(lbetas),torch.exp(llams),torch.exp(lsigs)
 
         lIs =[]
+        #print( (beta.shape,lam.shape,sig.shape) )
         for (beta,lam,sig) in zip(betas,lams,sigs):
             beta,lam,sig,n = FCYeast_simulator.fix_data_type(beta,lam,sig,N)
 
             t,Pr,s = FCYeast_simulator.simulator(beta,lam,sig,rho=self.rho,T=T,N=n)
             I_prot = FCYeast_simulator.prot2intensity(Pr)
+
+            del t,s
+
             lI = torch.logaddexp(FCYeast_simulator.autofluo.sample((N))[0],torch.log(I_prot))
 
             lIs.append(lI.reshape(-1,1))

@@ -27,7 +27,7 @@ except:
     frac = 1.
 # %%
 
-estimates = torch.load('ABC_estimates.pt')
+estimates = torch.load('ABC_estimates.pt',weights_only=False)
 means_ABC = torch.tensor(estimates['training_means']).to(device)
 sigmas_ABC = torch.tensor(estimates['training_sigmas']).to(device)
 target = FCYeast2_simulator.target(means_ABC,sigmas_ABC)
@@ -164,10 +164,10 @@ for i in tqdm(range(100000)):
 
     if i%100 == 99:
         print(i,param,lp, logprior(param))
-        np.savetxt('FCYeast2_MCMC/mcmc_real_results_{}seed_{}datapoints.csv'.format(seed,N),
+        np.savetxt('FCYeast2_MCMC/mcmc_real_results_{}datapoints.csv'.format(N),
            np.hstack((np.stack(sampled_params), np.array(sampled_logpost).reshape(-1,1))))
         
 # %%
-np.savetxt('FCYeast2_MCMC/mcmc_real_results_{}sedd_{}datapoints.csv'.format(seed,N),
+np.savetxt('FCYeast2_MCMC/mcmc_real_results_{}datapoints.csv'.format(N),
            np.hstack((np.stack(sampled_params), np.array(sampled_logpost).reshape(-1,1))))
 

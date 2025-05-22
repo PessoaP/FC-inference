@@ -25,7 +25,7 @@ folder = 'dilution'+dil
 model_file = folder+'/network.pt'
 figs_direc = folder+'/network_perform'
 
-estimates = torch.load('ABC_estimates.pt')
+estimates = torch.load('ABC_estimates.pt',weights_only=False)
 means = estimates['{}dilution'.format(dil)]
 sigmas = 1.+means*0
 
@@ -51,6 +51,7 @@ show_iter  = 100
 
 n_batch    = 16
 x = target.sample(N=1024*1024)
+
 batch_size = x.size(0)//n_batch
 
 x,context = x[:,0].reshape(-1,1)*1.0,x[:,1:]
