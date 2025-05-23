@@ -13,16 +13,11 @@ torch.manual_seed(seed)
 
 enable_cuda = True
 CUDA_LAUNCH_BLOCKING=1
-#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device = torch.device('cpu')
 
 FCYeast_simulator.adjust_device(device)
 
-# estimates = torch.load('ABC_estimates.pt')
-# means = estimates['training_means']
-# sigmas = estimates['training_sigmas']
 target = FCYeast_simulator.target()
-
 
 if seed == 0:
     gt = target.params_dist.loc

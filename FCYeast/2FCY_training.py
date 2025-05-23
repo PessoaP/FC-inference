@@ -42,7 +42,7 @@ except:
     print('starting from scratch')
 
 # %%
-max_iter   = 1000
+max_iter   = 2000
 show_iter  = 100
 
 n_batch    = 16
