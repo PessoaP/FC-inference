@@ -77,8 +77,8 @@ indexes = [SVM_clean(df)[-1]==1 for df in (pd1,pd2,pd3)]
 # %%
 def prepgraph(ax,df,indexes,color,label=''):
     ax.scatter(df[indexes[0]],df[indexes[1]],s=6,alpha=.05,color=color,label=label)
-    ax.set_xlabel(r'$\log_{10}$' + indexes[0][-4:])
-    ax.set_ylabel(r'$\log_{10}$' + indexes[1][-4:])
+    ax.set_xlabel(r'$\log_{10}$' + indexes[0][-5:])
+    ax.set_ylabel(r'$\log_{10}$' + indexes[1][-5:])
 
 def graphs3(ax,df,color,label):
     logdf = take_log(df[['FL1-A','FSC-A','FSC-H']])

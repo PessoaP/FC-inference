@@ -131,9 +131,9 @@ for i in tqdm(range(10000)):
 
     if i%100 == 99:
         print(i,param,lp, logprior(param))
-        np.savetxt('FCYeast2_MCMC/ABC_results_{}.csv'.format(seed),
+        np.savetxt('FCYeast2_MCMC/ABC_results.csv',
            np.hstack((np.stack(sampled_params), np.array(sampled_logpost).reshape(-1,1))))
-np.savetxt('FCYeast2_MCMC/ABC_results_{}.csv'.format(seed),
+np.savetxt('FCYeast2_MCMC/ABC_results.csv',
            np.hstack((np.stack(sampled_params), np.array(sampled_logpost).reshape(-1,1))))
 
 # %%
