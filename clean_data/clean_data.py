@@ -35,7 +35,6 @@ def take_log(df,base=10):
 sac_files_d1 = ['ECOLandSACatDIL_368rpm_sequentialstressContinousCulture/'+st+'.fcs' for st in ['A01 R3D1T1','A02 R3D1T2','A03 R3D1T3']]
 sac_files_d2 = ['ECOLandSACatDIL_368rpm_sequentialstressContinousCulture/'+st+'.fcs' for st in ['A05 R3D2T1','A06 R3D2T2','A07 R3D2T3']]
 sac_files_d3 = ['ECOLandSACatDIL_368rpm_sequentialstressContinousCulture/'+st+'.fcs' for st in ['A08 R3D3T1','A09 R3D3T2','A10 R3D3T3']]
-stat_phase = ['ScerevisiaeOldFC/A0{}.fcs'.format(i) for i in range(1,10)]
 
 # %%
 pd1 = pd.concat([acceptable_data(x) for x in (sac_files_d1)],ignore_index=True)

@@ -2,13 +2,18 @@
 
 This repository contains the code associated with the manuscript titled:  **"Simulation-trained Conditional Normalizing Flows for Likelihood Approximation"**
 
-In this work, we present a neural network–based inference framework for simulation-based likelihood estimation in non-Markovian biological models.
+In this work, we introduce a neural network–based inference framework that estimates likelihoods from simulation data, enabling inference in biological models that are non-Markovian or otherwise have intractable likelihoods.
 
 You can find the preprint on arXiv: [https://arxiv.org/abs/2506.09374](https://arxiv.org/abs/2506.09374)
 
+<div class="image-container" style="display:inline-block; padding:10px; background-color:white;">
+  <img src="https://github.com/PessoaP/FC-inference/blob/main/f1.png?raw=true" width="600" style="background-color:white;"/>
+</div>
+
+
 ---
 
-## 🔧 Directory Structure
+## Directory Structure
 
 - `model1_DCD/` – Deterministic Cell Division (Model 1)
 - `model2_SCD/` – Stochastic Cell Division (Model 2)
@@ -17,7 +22,7 @@ You can find the preprint on arXiv: [https://arxiv.org/abs/2506.09374](https://a
 
 ---
 
-## 📦 How to Run
+## How to Run
 
 ### Models 1 and 2
 
@@ -36,8 +41,8 @@ Analogously for **Model 2** run the rescpective files in the `model2_SCD1` direc
 
 ### Real Data Preprocessing
 
-To run inference on experimental flow cytometry data, place the data file  
-(**link to be provided**)  
+To run inference on experimental flow cytometry data, place the data file  found 
+[here](https://drive.google.com/file/d/1ZkPdYIHGolHsSyp6VHx1ooLljS5-ofEd/view?usp=sharing)
 into the folder `clean_data/`  then run the script:
 
 ```bash
