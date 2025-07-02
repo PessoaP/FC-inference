@@ -1,6 +1,6 @@
-# Code for "Simulation-trained Conditional Normalizing Flows for Likelihood Approximation"
+# Code for "Inherited or produced? Inferring protein production kinetics when protein counts are shaped by a cell's division history"
 
-This repository contains the code associated with the manuscript titled:  **"Simulation-trained Conditional Normalizing Flows for Likelihood Approximation"**
+This repository contains the code associated with the manuscript titled:  **"Inherited or produced? Inferring protein production kinetics when protein counts are shaped by a cell's division history"**
 
 In this work, we introduce a neural network–based inference framework that estimates likelihoods from simulation data, enabling inference in biological models that are non-Markovian or otherwise have intractable likelihoods.
 

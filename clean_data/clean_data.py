@@ -46,8 +46,6 @@ dils=(.12,.23,.33)
 from scipy.linalg import sqrtm
 from sklearn.svm import OneClassSVM
 
-
-
 def SVM_clean(df,nu=.025,Z_train=True):
     X = take_log(df[['FL1-A','FSC-A','FSC-H']],base=10).to_numpy()
     X[:,2] = X[:,2]-X[:,1]
