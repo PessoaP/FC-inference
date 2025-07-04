@@ -89,7 +89,7 @@ If you encounter any issues or have questions about the code or manuscript, feel
 If you find this work useful, we appreciate the citation. Here's the BibTeX:
 ```
 @misc{pessoa2025simulation,
-      title={Simulation-trained conditional normalizing flows for likelihood approximation: a case study in stress regulation kinetics in yeast}, 
+      title={Inherited or produced? Inferring protein production kinetics when protein counts are shaped by a cell's division history}, 
       author={Pedro Pessoa and Juan Andres Martinez and Vincent Vandenbroucke and Frank Delvigne and Steve Pressé},
       year={2025},
       eprint={2506.09374},
