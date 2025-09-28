@@ -7,7 +7,7 @@ c_directory = os.getcwd()
 sys.path.append(os.path.dirname(c_directory))
 import eZsamplers
 
-from FCYeast import FCYeast_simulator
+from Model3_FCYeast import FCYeast_simulator
 
 enable_cuda=True
 device = torch.device('cuda' if torch.cuda.is_available() and enable_cuda else 'cpu')

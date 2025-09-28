@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 seed = 1337
 torch.manual_seed(seed)
+np.random.seed(seed)
 torch.no_grad()
 
 import sys
@@ -53,13 +54,12 @@ dfs = [pd.read_csv(os.path.dirname(c_directory) +'/clean_data/complete_d={}.csv'
 x_full = [torch.tensor(df['FL1-A'].to_numpy().astype(np.float32)).reshape(-1,1).to(device) for df in dfs]
 
 N = (min([xi.size(0) for xi in x_full]))
-ind = np.arange(N)
-np.random.shuffle(ind)
+ind = torch.randperm(N)
 
 x = []
 for xi in x_full:
     Ni = xi.size(0)
-    indi = torch.tensor( np.concatenate((ind,np.arange(N,Ni))) ) <= Ni*frac 
+    indi = torch.cat((ind.to(xi.device), torch.arange(N, Ni, device=xi.device))) <= Ni * frac
     x.append(torch.log(xi[indi]))
 N=int(N*frac)
 
