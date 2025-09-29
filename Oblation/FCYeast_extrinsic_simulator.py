@@ -98,6 +98,9 @@ def cell_divide(x,rho):
     # Samples of rho are the volume ratio of cells before and after division, as such each protein will have a probability rho.sample of being in the cell aafter division
     return eZsamplers.ap_binomial(x,rho.sample(x.shape))
 
+
+
+
 def simulator(beta_mean,lam,sig,
               rho=eZsamplers.beta_sym(6.,14.,device=device),
               T=100,N=1024,
@@ -168,7 +171,7 @@ def simulator(beta_mean,lam,sig,
             T_lastdiv[idx] = t_div_exact[idx]
             div_time_dist = torch.distributions.Gamma(nu[idx],nu[idx])
             T_nextdiv[idx] = div_time_dist.sample()*Z[idx]
-
+            
             if len(x_to_append)>0:
                 idx_new = (torch.randperm(len(x)+len(x_to_append),device=device)[:N]).reshape(-1)
 
@@ -190,3 +193,43 @@ xi = 0.05 #Value obtained from
 def prot2intensity(Pr,xi=xi,tol=1e-3):
     return (xi*Pr + torch.sqrt(xi*Pr)*torch.randn_like(Pr)).clamp(xi*tol)
 
+
+class target():
+    def __init__(self, means = default_means,
+                 sigmas=default_sigmas):
+        self.prior = torch.distributions.MultivariateNormal((means).clone().detach().to(device), torch.diag((sigmas)**2).clone().detach().to(device))
+        self.params_dist = torch.distributions.MultivariateNormal((means).clone().detach().to(device), torch.diag((sigmas)**2).clone().detach().to(device))
+        self.rho = eZsamplers.beta_sym(6.,14.,device=device)
+
+
+
+# dilution factors
+dils = torch.tensor([.12, .23])
+
+
+def separate(x: torch.Tensor) -> torch.Tensor:
+    return torch.stack([
+        torch.stack([x[0], x[1], x[2], x[3]]),
+        torch.stack([x[0], x[4], x[5], x[6]])
+    ])
+
+
+to_hours = -torch.tensor([
+    [0, -1, -1, 0],
+    [0, -1, -1, 0]
+], dtype=torch.float64) * torch.log(dils).reshape(-1, 1)
+
+to_arbitrary = -torch.tensor([
+    [1, 0, 0, 0],
+    [1, 0, 0, 0]
+], dtype=torch.float64) * torch.log(dils).reshape(-1, 1)
+
+
+
+def transform_to_arbitrary(x):
+    """
+    Suppose that betas (0 and 1) are in hours,
+    and the others are in arbitrary units.
+    Turn them all to arbitrary units.
+    """
+    return separate(x) + to_arbitrary.to(x.device)

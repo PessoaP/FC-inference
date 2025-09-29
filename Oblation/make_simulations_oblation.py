@@ -32,8 +32,11 @@ best_param
 outdir = "oblation_simulations"
 os.makedirs(outdir, exist_ok=True)
 
-param = torch.exp(best_param)
-param_high, param_low = param[:4], param[[0, 4, 5, 6]]
+
+#param_high, param_low = param[:4], param[[0, 4, 5, 6]]
+param_high, param_low = FCYeast_extrinsic_simulator.transform_to_arbitrary(best_param)
+param_high, param_low = torch.exp(param_high).float(), torch.exp(param_low).float()
+#print(param_high, param_low)
 param_sets = {"high": param_high, "low": param_low}
 
 # %%
@@ -42,12 +45,12 @@ for seed in (0, 1, 2):
     for pname, p in param_sets.items():
         # Run simulator
         t, Pr, s, betas, Zs = FCYeast_extrinsic_simulator.simulator(
-            p[0], p[1:3], p[3], T=100, N=2**10
+            p[0], p[1:3], p[3], T=100, N=40000
         )
-
+        
         # Convert Pr → intensity → total log-intensity
         I_prot = FCYeast_extrinsic_simulator.prot2intensity(Pr)
-        autofluo = FCYeast_extrinsic_simulator.autofluo.sample(Pr.numel())[0].reshape(Pr.shape)
+        autofluo = FCYeast_extrinsic_simulator.autofluo.sample(Pr.numel())[0].reshape(Pr.shape).clamp(min=1e-9)
         lI = torch.logaddexp(autofluo, torch.log(I_prot))
 
 
