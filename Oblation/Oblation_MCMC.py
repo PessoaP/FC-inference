@@ -90,12 +90,6 @@ def log_likelihood(data,params,model):
     return model.log_prob(data,params*vectorize_params)
 
 def log_post(data,params,model,prior):
-    # ll = log_likelihood(data,params,model)
-    # # print(data[:10])
-    # # print(data.isnan().sum())
-    # # print(torch.arange(data.size(0)).to(device)[ll.isnan()])
-    # # print(data[ll.isnan()])
-    # print(ll.sum(),prior.log_prob(params))
     return log_likelihood(data,params,model).sum() + prior.log_prob(params)
 
 

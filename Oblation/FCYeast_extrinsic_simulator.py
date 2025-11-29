@@ -87,8 +87,7 @@ def simulate_between_cell_div(x,s,T,beta,lam,rho):
             rate += beta * dt_prop * (s == 1)
         else:
             rate += beta[ind, s] * dt_prop
-
-        
+    
         s = torch.where(stop_changing, s, 1 - s) #If it switches states, switch state
 
     x += eZsamplers.ap_poisson(rate) #Since the sum of Poisson is Poisson with the sum of rates, it is enough to just sample the protein production once.
@@ -233,3 +232,11 @@ def transform_to_arbitrary(x):
     Turn them all to arbitrary units.
     """
     return separate(x) + to_arbitrary.to(x.device)
+
+def transform_to_hours(x):
+    """
+    Suppose that betas (0 and 1) are in hours,
+    and the others are in arbitrary units.
+    Turn them all to arbitrary units.
+    """
+    return separate(x) + to_hours.to(x.device)

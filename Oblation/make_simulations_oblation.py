@@ -38,6 +38,7 @@ param_high, param_low = FCYeast_extrinsic_simulator.transform_to_arbitrary(best_
 param_high, param_low = torch.exp(param_high).float(), torch.exp(param_low).float()
 #print(param_high, param_low)
 param_sets = {"high": param_high, "low": param_low}
+print(torch.exp(FCYeast_extrinsic_simulator.transform_to_hours(best_param)))
 
 # %%
 for seed in (0, 1, 2):
@@ -50,7 +51,7 @@ for seed in (0, 1, 2):
         
         # Convert Pr → intensity → total log-intensity
         I_prot = FCYeast_extrinsic_simulator.prot2intensity(Pr)
-        autofluo = FCYeast_extrinsic_simulator.autofluo.sample(Pr.numel())[0].reshape(Pr.shape).clamp(min=1e-9)
+        autofluo = FCYeast_extrinsic_simulator.autofluo.sample(Pr.numel())[0].reshape(Pr.shape)#.clamp(min=1e-9)
         lI = torch.logaddexp(autofluo, torch.log(I_prot))
 
 
