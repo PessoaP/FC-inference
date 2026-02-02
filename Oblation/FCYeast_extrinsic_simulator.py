@@ -98,21 +98,20 @@ def cell_divide(x,rho):
     return eZsamplers.ap_binomial(x,rho.sample(x.shape))
 
 
-
-
 def simulator(beta_mean,lam,sig,
               rho=eZsamplers.beta_sym(6.,14.,device=device),
               T=100,N=1024,
-              z_evol_step = .01, beta_evol_step = .01):
+              z_evol_step = .01, beta_evol_step = .01,
+              hereditary=True,sig_beta=.3):
     adjust_indexes(N) 
     
-    beta_mean,lam,sig,N = fix_data_type(beta_mean,lam,sig,N)
-    beta = beta_mean*(1+torch.randn(N,1,device=device)*.3).clamp(min=.1)
+    beta,lam,sig,N = fix_data_type(beta_mean,lam,sig,N)
+    beta = beta_mean*(1+torch.randn(N,1,device=device)*sig_beta).clamp(min=.1)
     nu = torch.pow(sig,-2)
     div_time_dist = torch.distributions.Gamma(nu,nu)
 
     tau,x,s = sample_initial(beta,lam,rho,N)
-    Z = torch.ones_like(x) #div_time_dist.sample() 
+    Z = torch.ones_like(x) ## div_time_dist.sample() 
     T_nextdiv = Z
     T_lastdiv = -tau*Z
 
@@ -164,7 +163,11 @@ def simulator(beta_mean,lam,sig,
 
             x_to_append = x_d_rem.clone()
             s_to_append = s_d_rem.clone()
-            beta_to_append = (beta[idx]).clone() * ( 1 + (torch.randn_like(x_to_append)*beta_evol_step).clamp(min=-.3,max=.3))
+            if hereditary:
+                beta_to_append = (beta[idx]).clone() * ( 1 + (torch.randn_like(x_to_append)*beta_evol_step).clamp(min=-.3,max=.3))
+            else: 
+                beta_to_append = beta_mean*(1+torch.randn_like(x_to_append)*sig_beta).clamp(min=.1)
+    
             z_to_append = (Z[idx]).clone()
 
             T_lastdiv[idx] = t_div_exact[idx]
@@ -177,10 +180,14 @@ def simulator(beta_mean,lam,sig,
                 x = torch.cat((x,x_to_append),dim=0)[idx_new].contiguous()
                 s = torch.cat((s,s_to_append),dim=0)[idx_new].contiguous()
                 beta = torch.cat((beta,beta_to_append),dim=0)[idx_new].contiguous()
-                Z = torch.cat((Z,z_to_append),dim=0)[idx_new].contiguous()
-                
-                Z = Z/Z.mean()
-                Z *= 1 + (torch.randn_like(Z)*z_evol_step).clamp(min=-.3,max=.3)
+
+                if hereditary:
+                    Z = torch.cat((Z,z_to_append),dim=0)[idx_new].contiguous()
+                    Z = Z/Z.mean()
+                    Z *= 1 + (torch.randn_like(Z)*z_evol_step).clamp(min=-.3,max=.3)
+                else:
+                    Z = torch.ones_like(x)
+                    
 
                 T_lastdiv = torch.cat((T_lastdiv,t_div_exact[idx].clone()),dim=0)[idx_new].contiguous()
                 T_nextdiv = torch.cat((T_nextdiv,T_nextdiv[idx].clone()),dim=0)[idx_new].contiguous().clamp(min=dt) 
@@ -240,3 +247,5 @@ def transform_to_hours(x):
     Turn them all to arbitrary units.
     """
     return separate(x) + to_hours.to(x.device)
+
+

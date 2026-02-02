@@ -26,7 +26,10 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # %%
 
-seed, stress = int(sys.argv[1]), sys.argv[2]  # 'low' or 'high'
+seed = int(sys.argv[1])
+stress = sys.argv[2]
+hereditary = sys.argv[3].lower() == "true"
+
 torch.manual_seed(seed)
 np.random.seed(seed)
 
@@ -73,8 +76,12 @@ for dil in dils_str:
 model_high_stress, model_low_stress = models
 
 # %%
-dv_high = pd.read_csv(f'oblation_simulations/sim_high_seed{seed}.csv')
-dv_low  = pd.read_csv(f'oblation_simulations/sim_low_seed{seed}.csv')
+if hereditary:
+    dv_high = pd.read_csv(f'oblation_simulations/sim_high_seed{seed}.csv')
+    dv_low  = pd.read_csv(f'oblation_simulations/sim_low_seed{seed}.csv')
+else:
+    dv_high = pd.read_csv(f'oblation_simulations/non_hereditary_sim_high_seed{seed}.csv')
+    dv_low  = pd.read_csv(f'oblation_simulations/non_hereditary_sim_low_seed{seed}.csv')
 
 data_high_stress = torch.tensor(dv_high['lI'].dropna().values).float().reshape(-1,1).to(device)
 data_low_stress = torch.tensor(dv_low['lI'].dropna().values).float().reshape(-1,1).to(device)
@@ -190,7 +197,7 @@ for i in tqdm(range(100000)):
 
     if i%100 == 99:
         print(i,param,lp, prior.log_prob(param))
-        np.savetxt('{}/mcmc_results_{}_{}.csv'.format(outdir,stress,seed),
+        np.savetxt('{}/mcmc_results_{}_{}_{}.csv'.format(outdir,stress,seed,str(hereditary)),
            np.hstack((np.stack(sampled_params), np.array(sampled_logpost).reshape(-1,1))))
         
 
