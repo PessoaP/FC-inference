@@ -76,7 +76,7 @@ for seed in (0, 1, 2):
         # Run simulator
         t, Pr, s, betas, Zs = FCYeast_extrinsic_simulator.simulator(
             p[0], p[1:3], p[3], T=100, N=40000, 
-            hereditary=False,sig_beta=.3
+            hereditary=False,sig_beta=.15
         )
         
         # Convert Pr → intensity → total log-intensity
