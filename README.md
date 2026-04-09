@@ -1,10 +1,10 @@
-# Code for "Inherited or produced? Inferring protein production kinetics when protein counts are shaped by a cell's division history"
+# Code for "Simulation-based inference captures non-Markovian effects as exempliﬁed in protein production kinetics through cell division"
 
-This repository contains the code associated with the manuscript titled:  **"Inherited or produced? Inferring protein production kinetics when protein counts are shaped by a cell's division history"**
+This repository contains the code associated with the [PNAS-published](https://doi.org/10.1073/pnas.2517309123) article  **"Simulation-based inference captures non-Markovian effects as exempliﬁed in protein production kinetics through cell division"**
 
 In this work, we introduce a neural network–based inference framework that estimates likelihoods from simulation data, enabling inference in biological models that are non-Markovian or otherwise have intractable likelihoods.
 
-You can find the preprint on arXiv: [https://arxiv.org/abs/2506.09374](https://arxiv.org/abs/2506.09374)
+You can fin the final version on PNAS:[https://www.pnas.org/doi/10.1073/pnas.2517309123](https://www.pnas.org/doi/10.1073/pnas.2517309123) 
 
 <div class="image-container" style="display:inline-block; padding:10px; background-color:white;">
   <img src="https://github.com/PessoaP/FC-inference/blob/main/f1.png?raw=true" width="600" style="background-color:white;"/>
@@ -88,12 +88,14 @@ If you encounter any issues or have questions about the code or manuscript, feel
 
 If you find this work useful, we appreciate the citation. Here's the BibTeX:
 ```
-@misc{pessoa2025simulation,
-      title={Inherited or produced? Inferring protein production kinetics when protein counts are shaped by a cell's division history}, 
-      author={Pedro Pessoa and Juan Andres Martinez and Vincent Vandenbroucke and Frank Delvigne and Steve Pressé},
-      year={2025},
-      eprint={2506.09374},
-      archivePrefix={arXiv},
-      url={https://arxiv.org/abs/2506.09374}, 
+@article{pessoa2025simulation,
+      author = {Pedro Pessoa  and Juan Andres Martinez  and Vincent Vandenbroucke  and Frank Delvigne  and Steve Pressé },
+      title = {Simulation-based inference captures non-Markovian effects as exemplified in protein production kinetics through cell division},
+      journal = {Proceedings of the National Academy of Sciences},
+      volume = {123},
+      number = {15},
+      pages = {e2517309123},
+      year = {2026},
+      doi = {10.1073/pnas.2517309123}
 }
 ```
