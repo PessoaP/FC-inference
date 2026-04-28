@@ -88,7 +88,7 @@ If you encounter any issues or have questions about the code or manuscript, feel
 
 If you find this work useful, we appreciate the citation. Here's the BibTeX:
 ```
-@article{pessoa2025simulation,
+@article{pessoa2026simulation,
       author = {Pedro Pessoa  and Juan Andres Martinez  and Vincent Vandenbroucke  and Frank Delvigne  and Steve Pressé },
       title = {Simulation-based inference captures non-Markovian effects as exemplified in protein production kinetics through cell division},
       journal = {Proceedings of the National Academy of Sciences},
